@@ -1,0 +1,18 @@
+Content-Type: multipart/mixed; boundary=next-part-zuB0VEK66qG0M6t4
+Date: Sun, 23 Oct 2016 20:59:40 +0200
+From: Test <test@example.org>
+To: =?utf-8?Q?=C3=BC=C3=A4=C3=B6?= <ueaeoe@example.org>
+Subject: =?utf-8?Q?=C3=BC=C3=A4=C3=B6?=
+
+This is a message with multiple parts in MIME format.
+--next-part-zuB0VEK66qG0M6t4
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+=C3=BC=C3=A4=C3=B6
+--next-part-zuB0VEK66qG0M6t4
+Content-Type: text/html; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+
+<html><head></head><body><strong>=C3=BC=C3=A4=C3=B6</strong></body></html>
+--next-part-zuB0VEK66qG0M6t4--

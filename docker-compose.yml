@@ -1,0 +1,13 @@
+version: '2'
+services:
+  mailhog:
+    image: blueimp/mailhog
+  test:
+    image: node:6-slim
+    entrypoint: node test.js
+    user: nobody
+    working_dir: /srv/www/
+    volumes:
+      - ".:/srv/www"
+    environment:
+      - MAILHOG_API_URL=http://mailhog:8025/api/v2

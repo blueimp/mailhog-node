@@ -1,0 +1,40 @@
+{
+  "name": "mailhog",
+  "version": "0.0.0",
+  "title": "MailHog NodeJS library",
+  "description": "A NodeJS library to interact with the MailHog API",
+  "keywords": [
+    "mailhog",
+    "nodejs",
+    "library",
+    "api"
+  ],
+  "homepage": "https://github.com/blueimp/mailhog-node",
+  "author": {
+    "name": "Sebastian Tschan",
+    "url": "https://blueimp.net"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/blueimp/mailhog-node.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "devDependencies": {
+    "standard": "8.3.0"
+  },
+  "dependencies": {
+    "quoted-printable": "1.0.0",
+    "utf8": "2.1.2"
+  },
+  "scripts": {
+    "lint": "standard *.js",
+    "unit": "./test.sh",
+    "test": "npm run lint && npm run unit",
+    "preversion": "npm test",
+    "postversion": "git push --tags origin HEAD && npm publish"
+  },
+  "main": "mailhog.js"
+}
