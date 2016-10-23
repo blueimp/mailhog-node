@@ -8,7 +8,7 @@
   - [getText](#gettext)
     - [Usage](#usage-1)
     - [Example](#example-1)
-  - [getText](#gethtml)
+  - [getHTML](#gethtml)
     - [Usage](#usage-2)
     - [Example](#example-2)
   - [getLatest](#getlatest)
