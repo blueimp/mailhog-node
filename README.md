@@ -18,12 +18,20 @@
 - [Author](#author)
 
 ## Initialization
+The `mailhog` module returns an initialization function.  
+This function accepts an options object that must include the `apiURL`.  
+Currently this library requires the MailHog API `v2`:
 
 ```js
 const mailhog = require('./mailhog')({
   apiURL: 'http://mailhog:8025/api/v2'
 })
 ```
+
+Replace `mailhog` in the `apiURL` with the hostname to your MailHog instance.
+
+The object returned by the initialization function is the `mailhog` API object
+that is used in the following examples.
 
 ## Methods
 
