@@ -4,6 +4,7 @@
 SENDMAIL_SCRIPT="
 echo '$(cat mail/01.eml)' | mailhog sendmail
 echo '$(cat mail/02.eml)' | mailhog sendmail
+echo '$(cat mail/03.eml)' | mailhog sendmail
 "
 
 setup() {

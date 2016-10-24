@@ -31,15 +31,24 @@ function getJSON (url) {
   })
 }
 
+// Decode the given buffer with the given charset to a JavaScript string.
+// If no charset is given, decodes using an utf8 charset.
+function charsetDecode (buffer, charset) {
+  if (!charset || /utf-?8/i.test(charset)) {
+    return buffer.toString()
+  }
+  return require('iconv-lite').decode(buffer, charset)
+}
+
 // Decodes the given string using the given encoding.
 // encoding can be base64|quoted-printable|7bit|8bit|binary
 // 7bit|8bit|binary will be returned as is.
-function decode (str, encoding) {
-  switch ((encoding || '').toString().toLowerCase()) {
+function decode (str, encoding, charset) {
+  switch ((encoding || '').toLowerCase()) {
     case 'base64':
-      return new Buffer(str, 'base64').toString()
+      return charsetDecode(new Buffer(str, 'base64'), charset)
     case 'quoted-printable':
-      return require('libqp').decode(str).toString()
+      return charsetDecode(require('libqp').decode(str), charset)
     default:
       return str
   }
@@ -59,7 +68,8 @@ function getContentPart (mail, typeRegExp) {
         type: type,
         content: decode(
           part.Body,
-          part.Headers['Content-Transfer-Encoding']
+          (part.Headers['Content-Transfer-Encoding'] || '').toString(),
+          /\bcharset=([\w_-]+)(?:;|$)/.exec(type)[1]
         )
       }
     }
