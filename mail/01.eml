@@ -9,10 +9,11 @@ This is a message with multiple parts in MIME format.
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-=C3=BC=C3=A4=C3=B6
+=C3=BC
+=C3=A4=C3=B6
 --next-part-zuB0VEK66qG0M6t4
 Content-Type: text/html; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-<html><head></head><body><strong>=C3=BC=C3=A4=C3=B6</strong></body></html>
+<html><head></head><body><strong>=C3=BC<br>=C3=A4=C3=B6</strong></body></html>
 --next-part-zuB0VEK66qG0M6t4--

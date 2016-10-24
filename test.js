@@ -24,7 +24,7 @@ mailhog.getLatest('nihon@example.org').then(function (result) {
 mailhog.getLatest('ueaeoe@example.org').then(function (result) {
   assert.strictEqual(
     result.content,
-    '<html><head></head><body><strong>üäö</strong></body></html>',
+    '<html><head></head><body><strong>ü<br>äö</strong></body></html>',
     'Parses quoted-printable multipart HTML mails'
   )
 })
@@ -32,7 +32,7 @@ mailhog.getLatest('ueaeoe@example.org').then(function (result) {
 mailhog.getLatest('ueaeoe@example.org', true).then(function (result) {
   assert.strictEqual(
     result.content,
-    'üäö',
+    'ü\r\näö',
     'Returns the plain text version if requested'
   )
 })
@@ -47,7 +47,7 @@ mailhog.search('example.org').then(function (result) {
     mailhog.getText(result.items[1]),
     {
       type: 'text/plain; charset=utf-8',
-      content: 'üäö'
+      content: 'ü\r\näö'
     },
     'Returns the decoded plain text version of an email object'
   )
@@ -55,7 +55,7 @@ mailhog.search('example.org').then(function (result) {
     mailhog.getHTML(result.items[1]),
     {
       type: 'text/html; charset=utf-8',
-      content: '<html><head></head><body><strong>üäö</strong></body></html>'
+      content: '<html><head></head><body><strong>ü<br>äö</strong></body></html>'
     },
     'Returns the decoded HTML version of an email object'
   )
