@@ -39,7 +39,7 @@ function decode (str, encoding) {
     case 'base64':
       return new Buffer(str, 'base64').toString()
     case 'quoted-printable':
-      return require('utf8').decode(require('quoted-printable').decode(str))
+      return require('libqp').decode(str).toString()
     default:
       return str
   }
