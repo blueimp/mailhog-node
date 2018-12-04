@@ -68,3 +68,11 @@ mailhog.search('example.org').then(function (result) {
     'Returns the decoded HTML version of an email object'
   )
 })
+
+mailhog.getLatest('no-charset@example.org').then(function (result) {
+  assert.strictEqual(
+    result.content,
+    'text content',
+    'Returns the mail content even if the charset is missing in Content-Type header'
+  )
+})
