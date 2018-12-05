@@ -45,14 +45,22 @@ mailhog.getLatest('iso-8859-1@example.org').then(function (result) {
   )
 })
 
+mailhog.getLatest('no-charset@example.org').then(function (result) {
+  assert.strictEqual(
+    result.content,
+    'text content',
+    'Returns the mail content even if the charset is missing in Content-Type header'
+  )
+})
+
 mailhog.search('example.org').then(function (result) {
   assert.strictEqual(
     result.count,
-    3,
+    4,
     'Returns a list of matching emails'
   )
   assert.deepStrictEqual(
-    mailhog.getText(result.items[2]),
+    mailhog.getText(result.items[3]),
     {
       type: 'text/plain; charset=utf-8',
       content: 'ü\r\näö'
@@ -60,19 +68,11 @@ mailhog.search('example.org').then(function (result) {
     'Returns the decoded plain text version of an email object'
   )
   assert.deepStrictEqual(
-    mailhog.getHTML(result.items[2]),
+    mailhog.getHTML(result.items[3]),
     {
       type: 'text/html; charset=utf-8',
       content: '<html><head></head><body><strong>ü<br>äö</strong></body></html>'
     },
     'Returns the decoded HTML version of an email object'
-  )
-})
-
-mailhog.getLatest('no-charset@example.org').then(function (result) {
-  assert.strictEqual(
-    result.content,
-    'text content',
-    'Returns the mail content even if the charset is missing in Content-Type header'
   )
 })

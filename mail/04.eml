@@ -1,13 +1,13 @@
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain
 Date: Tue, 04 Dec 2018 15:54:33 +0000
-From: no-charset@example.org
+From: Test <test@example.org>
 MIME-Version: 1.0
 Message-ID: <1e5c0431-70d4-af51-5cd4-020e21574e12@example.org>
 Received: from [127.0.0.1] by mailhog.example (MailHog)
           id gpS1WrCi_ZfFsw5nmWa3-bFRzBHJ2ZKSRj61UjUXvhU=@mailhog.example; Tue, 04 Dec 2018 15:54:33 +0000
 Return-Path: <test@example.org>
 Subject: Mail without charset
-To: nihon@example.org
+To: no-charset@example.org
 
 text content
