@@ -55,5 +55,5 @@
     "preversion": "npm run lint && ./test.sh",
     "postversion": "git push --tags origin HEAD && npm publish"
   },
-  "main": "mailhog.js"
+  "main": "cjs/mailhog.js"
 }
