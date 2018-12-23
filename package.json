@@ -23,9 +23,7 @@
     "node": ">=6.0.0"
   },
   "dependencies": {
-    "libqp": "1.1.0"
-  },
-  "optionalDependencies": {
+    "libqp": "1.1.0",
     "iconv-lite": "0.4.24"
   },
   "devDependencies": {
