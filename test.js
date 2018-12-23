@@ -4,7 +4,7 @@
 
 const assert = require('assert')
 const mailhog = require('./mailhog')({
-  apiURL: process.env.MAILHOG_API_URL
+  baseUrl: process.env.MAILHOG_HOST
 })
 
 // Throw for any unhandled rejections in Promise chains:
@@ -75,4 +75,16 @@ mailhog.search('example.org').then(function (result) {
     },
     'Returns the decoded HTML version of an email object'
   )
+})
+
+mailhog.deleteAll().then(function (resp) {
+  console.log(resp)
+
+  mailhog.search('example.org').then(function (result) {
+    assert.strictEqual(
+      result.count,
+      0,
+      'Returns no emails'
+    )
+  })
 })

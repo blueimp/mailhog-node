@@ -12,4 +12,4 @@ services:
     volumes:
       - ".:/srv/www"
     environment:
-      - MAILHOG_API_URL=http://mailhog:8025/api/v2
+      - MAILHOG_HOST=http://mailhog:8025

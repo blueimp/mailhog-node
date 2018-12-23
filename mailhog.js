@@ -45,11 +45,11 @@ function decode (str, encoding, charset) {
 function getContentPart (mail, typeRegExp) {
   let parts = [mail.Content]
   if (mail.MIME) parts = parts.concat(mail.MIME.Parts)
-  for (let part of parts) {
-    let type = (part.Headers['Content-Type'] || '').toString()
+  for (const part of parts) {
+    const type = (part.Headers['Content-Type'] || '').toString()
     if (typeRegExp.test(type)) {
-      let matches = /\bcharset=([\w_-]+)(?:;|$)/.exec(type)
-      let charset = matches ? matches[1] : undefined
+      const matches = /\bcharset=([\w_-]+)(?:;|$)/.exec(type)
+      const charset = matches ? matches[1] : undefined
       return {
         type: type,
         content: decode(
@@ -64,7 +64,9 @@ function getContentPart (mail, typeRegExp) {
 
 module.exports = function (options) {
   options = options || {}
-  const apiURL = options.apiURL || process.env.MAILHOG_API_URL
+
+  const baseUrl = options.baseUrl
+
   return {
     // Sends a search request to the MailHog API.
     // Returns a promise that resolves with a list of email objects.
@@ -75,7 +77,7 @@ module.exports = function (options) {
     search: function (query, kind, start, limit) {
       query = encodeURIComponent(query)
       kind = kind || 'containing'
-      let url = `${apiURL}/search?kind=${kind}&query=${query}`
+      let url = `${baseUrl}/api/v2/search?kind=${kind}&query=${query}`
       if (start) url += `&start=${start}`
       if (limit) url += `&limit=${limit}`
       return request(url, { json: true })
@@ -100,9 +102,14 @@ module.exports = function (options) {
       kind = kind || 'to'
       return this.search(query, kind, 0, 1).then(response => {
         if (!response.count) return
-        let mail = response.items[0]
+        const mail = response.items[0]
         return (!plainText && this.getHTML(mail)) || this.getText(mail)
       })
+    },
+    // Deletes all emails
+    deleteAll: function () {
+      const url = `${baseUrl}/api/v1/messages`
+      return request.delete(url, { json: true })
     }
   }
 }
