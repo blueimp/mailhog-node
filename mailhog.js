@@ -11,25 +11,9 @@
  * https://opensource.org/licenses/MIT
  */
 
- // Sends a GET request to the given url.
- // Returns a promise that resolves with parsed JSON data.
-function getJSON (url) {
-  const http = url.startsWith('https') ? 'https' : 'http'
-  return new Promise((resolve, reject) => {
-    require(http).get(url, (response) => {
-      let body = ''
-      response
-        .on('data', (chunk) => { body += chunk })
-        .on('end', () => {
-          try {
-            resolve(JSON.parse(body))
-          } catch (error) {
-            reject(error)
-          }
-        })
-    }).on('error', reject)
-  })
-}
+const request   = require('request-promise-native')
+const libqp     = require('libqp')
+const iconvLite = require('iconv-lite')
 
 // Decode the given buffer with the given charset to a JavaScript string.
 // If no charset is given, decodes using an utf8 charset.
@@ -37,7 +21,7 @@ function charsetDecode (buffer, charset) {
   if (!charset || /utf-?8/i.test(charset)) {
     return buffer.toString()
   }
-  return require('iconv-lite').decode(buffer, charset)
+  return iconvLite.decode(buffer, charset)
 }
 
 // Decodes the given string using the given encoding.
@@ -48,7 +32,7 @@ function decode (str, encoding, charset) {
     case 'base64':
       return charsetDecode(new Buffer(str, 'base64'), charset)
     case 'quoted-printable':
-      return charsetDecode(require('libqp').decode(str), charset)
+      return charsetDecode(libqp.decode(str), charset)
     default:
       return str
   }
@@ -94,7 +78,7 @@ module.exports = function (options) {
       let url = `${apiURL}/search?kind=${kind}&query=${query}`
       if (start) url += `&start=${start}`
       if (limit) url += `&limit=${limit}`
-      return getJSON(url)
+      return request(url, { json: true })
     },
     // Returns the text content part of the given email object.
     // * mail is an object returned by MailHog for an email message

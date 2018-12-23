@@ -1,7 +1,9 @@
 version: '2'
+
 services:
   mailhog:
     image: blueimp/mailhog
+
   test:
     image: node:6-slim
     entrypoint: node test.js
