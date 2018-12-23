@@ -6,10 +6,9 @@ services:
 
   test:
     image: node:6-slim
-    entrypoint: node test.js
-    user: nobody
-    working_dir: /srv/www/
+    entrypoint: npm run test
+    working_dir: /app
     volumes:
-      - ".:/srv/www"
+      - ".:/app"
     environment:
       - MAILHOG_HOST=http://mailhog:8025

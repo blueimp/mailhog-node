@@ -1,90 +1,83 @@
-#!/usr/bin/env node
+import assert from 'assert'
+import mailhog from './cjs/mailhog'
 
-'use strict'
-
-const assert = require('assert')
-const mailhog = require('./mailhog')({
-  baseUrl: process.env.MAILHOG_HOST
+const mailhogClient = mailhog({
+  baseUrl: process.env.MAILHOG_HOST,
 })
 
 // Throw for any unhandled rejections in Promise chains:
-process.on('unhandledRejection', function (reason) {
+process.on('unhandledRejection', reason => {
   console.error(reason)
   process.exit(1)
 })
 
-mailhog.getLatest('nihon@example.org').then(function (result) {
+;(async () => {
+  let result = await mailhogClient.getLatest('nihon@example.org')
+
   assert.strictEqual(
     result.content,
     '日本\n',
-    'Parses base64 encoded plain text mails'
+    'Parses base64 encoded plain text mails',
   )
-})
 
-mailhog.getLatest('ueaeoe@example.org').then(function (result) {
+  result = await mailhogClient.getLatest('ueaeoe@example.org')
+
   assert.strictEqual(
     result.content,
     '<html><head></head><body><strong>ü<br>äö</strong></body></html>',
-    'Parses quoted-printable multipart HTML mails'
+    'Parses quoted-printable multipart HTML mails',
   )
-})
 
-mailhog.getLatest('ueaeoe@example.org', true).then(function (result) {
+  result = await mailhogClient.getLatest('ueaeoe@example.org', true)
+
   assert.strictEqual(
     result.content,
     'ü\r\näö',
-    'Returns the plain text version if requested'
+    'Returns the plain text version if requested',
   )
-})
 
-mailhog.getLatest('iso-8859-1@example.org').then(function (result) {
+  result = await mailhogClient.getLatest('iso-8859-1@example.org')
+
   assert.strictEqual(
     result.content,
     'üäö',
-    'Parses quoted-printable encoded mails with ISO-8859-1 charset'
+    'Parses quoted-printable encoded mails with ISO-8859-1 charset',
   )
-})
 
-mailhog.getLatest('no-charset@example.org').then(function (result) {
+  result = await mailhogClient.getLatest('no-charset@example.org')
+
   assert.strictEqual(
     result.content,
     'text content',
-    'Returns the mail content even if the charset is missing in Content-Type header'
+    'Returns the mail content even if the charset is missing in Content-Type header',
   )
-})
 
-mailhog.search('example.org').then(function (result) {
-  assert.strictEqual(
-    result.count,
-    4,
-    'Returns a list of matching emails'
-  )
+  result = await mailhogClient.search('example.org')
+
+  assert.strictEqual(result.count, 4, 'Returns a list of matching emails')
+
   assert.deepStrictEqual(
-    mailhog.getText(result.items[3]),
+    mailhogClient.getText(result.items[3]),
     {
-      type: 'text/plain; charset=utf-8',
-      content: 'ü\r\näö'
+      type:    'text/plain; charset=utf-8',
+      content: 'ü\r\näö',
     },
-    'Returns the decoded plain text version of an email object'
+    'Returns the decoded plain text version of an email object',
   )
+
   assert.deepStrictEqual(
-    mailhog.getHTML(result.items[3]),
+    mailhogClient.getHTML(result.items[3]),
     {
-      type: 'text/html; charset=utf-8',
-      content: '<html><head></head><body><strong>ü<br>äö</strong></body></html>'
+      type:    'text/html; charset=utf-8',
+      content:
+        '<html><head></head><body><strong>ü<br>äö</strong></body></html>',
     },
-    'Returns the decoded HTML version of an email object'
+    'Returns the decoded HTML version of an email object',
   )
-})
 
-mailhog.deleteAll().then(function (resp) {
-  console.log(resp)
+  await mailhogClient.deleteAll()
 
-  mailhog.search('example.org').then(function (result) {
-    assert.strictEqual(
-      result.count,
-      0,
-      'Returns no emails'
-    )
-  })
-})
+  result = await mailhogClient.search('example.org')
+
+  assert.strictEqual(result.count, 0, 'Returns no emails')
+})()

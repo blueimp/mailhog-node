@@ -1,5 +1,3 @@
-'use strict'
-
 /*
  * NodeJS library to interact with the MailHog API.
  * https://github.com/blueimp/mailhog-node
@@ -11,13 +9,13 @@
  * https://opensource.org/licenses/MIT
  */
 
-const request   = require('request-promise-native')
-const libqp     = require('libqp')
-const iconvLite = require('iconv-lite')
+import request from 'request-promise-native'
+import libqp from 'libqp'
+import iconvLite from 'iconv-lite'
 
 // Decode the given buffer with the given charset to a JavaScript string.
 // If no charset is given, decodes using an utf8 charset.
-function charsetDecode (buffer, charset) {
+function charsetDecode(buffer, charset) {
   if (!charset || /utf-?8/i.test(charset)) {
     return buffer.toString()
   }
@@ -27,7 +25,7 @@ function charsetDecode (buffer, charset) {
 // Decodes the given string using the given encoding.
 // encoding can be base64|quoted-printable|7bit|8bit|binary
 // 7bit|8bit|binary will be returned as is.
-function decode (str, encoding, charset) {
+function decode(str, encoding, charset) {
   switch ((encoding || '').toLowerCase()) {
     case 'base64':
       return charsetDecode(new Buffer(str, 'base64'), charset)
@@ -42,7 +40,7 @@ function decode (str, encoding, charset) {
 // * mail is an object returned by MailHog for an email message
 // * typeRegExp is a regular expression matched against the parts' content-type
 // Returns an object with type (content-type) and content (decoded) properties.
-function getContentPart (mail, typeRegExp) {
+function getContentPart(mail, typeRegExp) {
   let parts = [mail.Content]
   if (mail.MIME) parts = parts.concat(mail.MIME.Parts)
   for (const part of parts) {
@@ -51,20 +49,18 @@ function getContentPart (mail, typeRegExp) {
       const matches = /\bcharset=([\w_-]+)(?:;|$)/.exec(type)
       const charset = matches ? matches[1] : undefined
       return {
-        type: type,
+        type,
         content: decode(
           part.Body,
           (part.Headers['Content-Transfer-Encoding'] || '').toString(),
-          charset
-        )
+          charset,
+        ),
       }
     }
   }
 }
 
-module.exports = function (options) {
-  options = options || {}
-
+export default function mkClient(options = {}) {
   const baseUrl = options.baseUrl
 
   return {
@@ -74,7 +70,7 @@ module.exports = function (options) {
     // * kind can be from|to|containing, defaults to "containing"
     // * start defines the start index of the search (default: 0)
     // * limit defines the max number of results (default: 50)
-    search: function (query, kind, start, limit) {
+    search(query, kind, start, limit) {
       query = encodeURIComponent(query)
       kind = kind || 'containing'
       let url = `${baseUrl}/api/v2/search?kind=${kind}&query=${query}`
@@ -84,12 +80,12 @@ module.exports = function (options) {
     },
     // Returns the text content part of the given email object.
     // * mail is an object returned by MailHog for an email message
-    getText: function (mail) {
+    getText(mail) {
       return getContentPart(mail, /^text\/plain($|;)/i)
     },
     // Returns the HTML content part of the given email object.
     // * mail is an object returned by MailHog for an email message
-    getHTML: function (mail) {
+    getHTML(mail) {
       return getContentPart(mail, /^text\/html($|;)/i)
     },
     // Retrieves the latest message content for the given query.
@@ -98,7 +94,7 @@ module.exports = function (options) {
     // * plainText (boolean) defines if text (true) or HTML (false) is returned
     // * kind can be from|to|containing, defaults to "to"
     // Returns HTML unless plainText is true or there is no HTML content
-    getLatest: function (query, plainText, kind) {
+    getLatest(query, plainText, kind) {
       kind = kind || 'to'
       return this.search(query, kind, 0, 1).then(response => {
         if (!response.count) return
@@ -107,9 +103,9 @@ module.exports = function (options) {
       })
     },
     // Deletes all emails
-    deleteAll: function () {
+    deleteAll() {
       const url = `${baseUrl}/api/v1/messages`
       return request.delete(url, { json: true })
-    }
+    },
   }
 }

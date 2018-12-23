@@ -1,5 +1,6 @@
 node_modules
 npm-debug.log
+package-lock.json
+package.json
 .DS_Store
 cjs
-.v8flags*.json
