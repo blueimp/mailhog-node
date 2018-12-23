@@ -28,7 +28,7 @@ function charsetDecode(buffer, charset) {
 function decode(str, encoding, charset) {
   switch ((encoding || '').toLowerCase()) {
     case 'base64':
-      return charsetDecode(new Buffer(str, 'base64'), charset)
+      return charsetDecode(Buffer.from(str, 'base64'), charset)
     case 'quoted-printable':
       return charsetDecode(libqp.decode(str), charset)
     default:
@@ -40,28 +40,42 @@ function decode(str, encoding, charset) {
 // * mail is an object returned by MailHog for an email message
 // * typeRegExp is a regular expression matched against the parts' content-type
 // Returns an object with type (content-type) and content (decoded) properties.
+
 function getContentPart(mail, typeRegExp) {
-  let parts = [mail.Content]
-  if (mail.MIME) parts = parts.concat(mail.MIME.Parts)
-  for (const part of parts) {
+  const parts = mail.MIME ? [mail.Content, ...mail.MIME.Parts] : [mail.Content]
+
+  const matchingPart = parts.find(part => {
     const type = (part.Headers['Content-Type'] || '').toString()
-    if (typeRegExp.test(type)) {
-      const matches = /\bcharset=([\w_-]+)(?:;|$)/.exec(type)
-      const charset = matches ? matches[1] : undefined
-      return {
-        type,
-        content: decode(
-          part.Body,
-          (part.Headers['Content-Transfer-Encoding'] || '').toString(),
-          charset,
-        ),
-      }
-    }
+    return typeRegExp.test(type)
+  })
+
+  if (!matchingPart) {
+    return undefined
+  }
+
+  const type = (matchingPart.Headers['Content-Type'] || '').toString()
+
+  const matches = /\bcharset=([\w_-]+)(?:;|$)/.exec(type)
+  const charset = matches ? matches[1] : undefined
+
+  const content = decode(
+    matchingPart.Body,
+    (matchingPart.Headers['Content-Transfer-Encoding'] || '').toString(),
+    charset,
+  )
+
+  return {
+    type,
+    content,
   }
 }
 
 export default function mkClient(options = {}) {
-  const baseUrl = options.baseUrl
+  let { baseUrl } = options
+
+  if (!baseUrl) {
+    baseUrl = process.env.MAILHOG_HOST
+  }
 
   return {
     // Sends a search request to the MailHog API.
@@ -71,9 +85,9 @@ export default function mkClient(options = {}) {
     // * start defines the start index of the search (default: 0)
     // * limit defines the max number of results (default: 50)
     search(query, kind, start, limit) {
-      query = encodeURIComponent(query)
-      kind = kind || 'containing'
-      let url = `${baseUrl}/api/v2/search?kind=${kind}&query=${query}`
+      const query_ = encodeURIComponent(query)
+      const kind_ = kind || 'containing'
+      let url = `${baseUrl}/api/v2/search?kind=${kind_}&query=${query_}`
       if (start) url += `&start=${start}`
       if (limit) url += `&limit=${limit}`
       return request(url, { json: true })
@@ -95,11 +109,20 @@ export default function mkClient(options = {}) {
     // * kind can be from|to|containing, defaults to "to"
     // Returns HTML unless plainText is true or there is no HTML content
     getLatest(query, plainText, kind) {
-      kind = kind || 'to'
-      return this.search(query, kind, 0, 1).then(response => {
-        if (!response.count) return
+      const kind_ = kind || 'to'
+
+      return this.search(query, kind_, 0, 1).then(response => {
+        if (!response.count) {
+          return undefined
+        }
+
         const mail = response.items[0]
-        return (!plainText && this.getHTML(mail)) || this.getText(mail)
+
+        if (plainText) {
+          return this.getText(mail)
+        }
+
+        return this.getHTML(mail) || this.getText(mail)
       })
     },
     // Deletes all emails

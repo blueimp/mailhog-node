@@ -10,7 +10,6 @@ process.on('unhandledRejection', reason => {
   console.error(reason)
   process.exit(1)
 })
-
 ;(async () => {
   let result = await mailhogClient.getLatest('nihon@example.org')
 
