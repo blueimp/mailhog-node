@@ -48,12 +48,17 @@
     "prettier-eslint-cli": "^4.7.1"
   },
   "scripts": {
+    "clean": "rimraf cjs",
     "build": "cross-env BABEL_ENV=cjs babel src --out-dir cjs",
     "test": "babel-node ./test.js",
     "format": "prettier-eslint --write './**/*.{js,jsx,json}'",
     "lint": "eslint .",
-    "preversion": "npm run lint && ./test.sh",
+    "preversion": "npm run format && npm run lint && npm run clean && npm run build && ./test.sh",
     "postversion": "git push --tags origin HEAD && npm publish"
   },
-  "main": "cjs/mailhog.js"
+  "main": "cjs/index.js",
+  "files": [
+    "cjs",
+    "src"
+  ]
 }

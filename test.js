@@ -1,5 +1,5 @@
 import assert from 'assert'
-import mailhog from './cjs/mailhog'
+import mailhog from './cjs/index'
 
 const mailhogClient = mailhog({
   baseUrl: process.env.MAILHOG_HOST,
@@ -74,7 +74,25 @@ process.on('unhandledRejection', reason => {
     'Returns the decoded HTML version of an email object',
   )
 
-  await mailhogClient.deleteAll()
+  result = await mailhogClient.getAll()
+
+  assert.strictEqual(result.total, 4)
+  assert.strictEqual(result.start, 0)
+  assert.strictEqual(result.count, 4)
+
+  // this test is repeated
+  assert.deepStrictEqual(
+    mailhogClient.getText(result.items[3]),
+    {
+      type:    'text/plain; charset=utf-8',
+      content: 'ü\r\näö',
+    },
+    'Returns the decoded plain text version of an email object',
+  )
+
+  result = await mailhogClient.deleteAll()
+
+  assert.strictEqual(result, undefined)
 
   result = await mailhogClient.search('example.org')
 

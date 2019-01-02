@@ -10,72 +10,11 @@
  */
 
 import request from 'request-promise-native'
-import libqp from 'libqp'
-import iconvLite from 'iconv-lite'
 
-// Decode the given buffer with the given charset to a JavaScript string.
-// If no charset is given, decodes using an utf8 charset.
-function charsetDecode(buffer, charset) {
-  if (!charset || /utf-?8/i.test(charset)) {
-    return buffer.toString()
-  }
-  return iconvLite.decode(buffer, charset)
-}
-
-// Decodes the given string using the given encoding.
-// encoding can be base64|quoted-printable|7bit|8bit|binary
-// 7bit|8bit|binary will be returned as is.
-function decode(str, encoding, charset) {
-  switch ((encoding || '').toLowerCase()) {
-    case 'base64':
-      return charsetDecode(Buffer.from(str, 'base64'), charset)
-    case 'quoted-printable':
-      return charsetDecode(libqp.decode(str), charset)
-    default:
-      return str
-  }
-}
-
-// Returns the content part matching the given content-type.
-// * mail is an object returned by MailHog for an email message
-// * typeRegExp is a regular expression matched against the parts' content-type
-// Returns an object with type (content-type) and content (decoded) properties.
-
-function getContentPart(mail, typeRegExp) {
-  const parts = mail.MIME ? [mail.Content, ...mail.MIME.Parts] : [mail.Content]
-
-  const matchingPart = parts.find(part => {
-    const type = (part.Headers['Content-Type'] || '').toString()
-    return typeRegExp.test(type)
-  })
-
-  if (!matchingPart) {
-    return undefined
-  }
-
-  const type = (matchingPart.Headers['Content-Type'] || '').toString()
-
-  const matches = /\bcharset=([\w_-]+)(?:;|$)/.exec(type)
-  const charset = matches ? matches[1] : undefined
-
-  const content = decode(
-    matchingPart.Body,
-    (matchingPart.Headers['Content-Transfer-Encoding'] || '').toString(),
-    charset,
-  )
-
-  return {
-    type,
-    content,
-  }
-}
+import getContentPart from './getContentPart'
 
 export default function mkClient(options = {}) {
-  let { baseUrl } = options
-
-  if (!baseUrl) {
-    baseUrl = process.env.MAILHOG_HOST
-  }
+  const { baseUrl } = options
 
   return {
     // Sends a search request to the MailHog API.
@@ -125,10 +64,17 @@ export default function mkClient(options = {}) {
         return this.getHTML(mail) || this.getText(mail)
       })
     },
+
     // Deletes all emails
     deleteAll() {
       const url = `${baseUrl}/api/v1/messages`
       return request.delete(url, { json: true })
+    },
+
+    // Gets all emails
+    getAll(start = 0, limit = 9999) {
+      const url = `${baseUrl}/api/v2/messages?start=${start}&limit=${limit}`
+      return request(url, { json: true })
     },
   }
 }

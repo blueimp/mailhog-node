@@ -18,12 +18,16 @@
 - [Author](#author)
 
 ## Initialization
-The `mailhog` module returns an initialization function.  
-This function accepts an options object that must include the `apiURL`.  
+The `mailhog` module returns an initialization function.
+This function accepts an options object that must include the `apiURL`.
 Currently this library requires the MailHog API `v2`:
 
 ```js
-const mailhog = require('./mailhog')({
+import mailhog from 'mailhog'
+# or
+# const mailhog = require('mailhog').default
+
+const mailhogClient = mailhog({
   apiURL: 'http://mailhog:8025/api/v2'
 })
 ```
@@ -36,13 +40,13 @@ that is used in the following examples.
 ## Methods
 
 ### search
-Sends a search request to the MailHog API.  
+Sends a search request to the MailHog API.
 Returns a list of emails objects.
 
 #### Usage
 
 ```js
-mailhog.search(query, kind, start, limit)
+mailhogClient.search(query, kind, start, limit)
   .then(function (result) {})
   .catch(function (error) {})
 ```
@@ -55,7 +59,7 @@ mailhog.search(query, kind, start, limit)
 #### Example
 
 ```js
-mailhog.search('example.org').then(function (result) {
+mailhogClient.search('example.org').then(function (result) {
   console.log(result)
 }).catch(function (error) {
   console.error(error)
@@ -68,7 +72,7 @@ Returns the text content part of the given email object.
 #### Usage
 
 ```js
-mailhog.getText(mail)
+mailhogClient.getText(mail)
 ```
 
 * `mail` is an object returned by MailHog for an email message
@@ -76,9 +80,9 @@ mailhog.getText(mail)
 #### Example
 
 ```js
-mailhog.search('example.org').then(function (result) {
+mailhogClient.search('example.org').then(function (result) {
   for (let mail of result.items) {
-    console.log(mailhog.getText(mail))
+    console.log(mailhogClient.getText(mail))
   }
 }).catch(function (error) {
   console.error(error)
@@ -91,7 +95,7 @@ Returns the HTML content part of the given email object.
 #### Usage
 
 ```js
-mailhog.getHTML(mail)
+mailhogClient.getHTML(mail)
 ```
 
 * `mail` is an object returned by MailHog for an email message
@@ -99,9 +103,9 @@ mailhog.getHTML(mail)
 #### Example
 
 ```js
-mailhog.search('example.org').then(function (result) {
+mailhogClient.search('example.org').then(function (result) {
   for (let mail of result.items) {
-    console.log(mailhog.getHTML(mail))
+    console.log(mailhogClient.getHTML(mail))
   }
 }).catch(function (error) {
   console.error(error)
@@ -109,13 +113,13 @@ mailhog.search('example.org').then(function (result) {
 ```
 
 ### getLatest
-Retrieves the latest message content for the given query.  
+Retrieves the latest message content for the given query.
 Returns a promise that resolves with the email content as result.
 
 #### Usage
 
 ```js
-mailhog.getLatest(query, plainText, kind)
+mailhogClient.getLatest(query, plainText, kind)
   .then(function (result) {})
   .catch(function (error) {})
 ```
@@ -129,7 +133,52 @@ Returns HTML unless `plainText` is `true` or there is no HTML content.
 #### Example
 
 ```js
-mailhog.getLatest('nihon@example.org').then(function (result) {
+mailhogClient.getLatest('nihon@example.org').then(function (result) {
+  console.log(result)
+}).catch(function (error) {
+  console.error(error)
+})
+```
+
+### deleteAll
+Deletes all received messages
+
+#### Usage
+
+```js
+mailhogClient.deleteAll()
+```
+
+Returns `undefined`
+
+#### Example
+
+```js
+mailhogClient.deleteAll()
+.catch(function (error) {
+  console.error(error)
+})
+```
+
+### getAll
+Similar to search, but just returns all received messages without filtering.
+Returns a list of emails objects.
+
+#### Usage
+
+```js
+mailhogClient.getAll(start, limit)
+  .then(function (result) {})
+  .catch(function (error) {})
+```
+
+* `start` defines the start index of the search (default: `0`)
+* `limit` defines the max number of results (default: `9999`)
+
+#### Example
+
+```js
+mailhogClient.getAll().then(function (result) {
   console.log(result)
 }).catch(function (error) {
   console.error(error)
