@@ -49,7 +49,7 @@ mailhog.getLatest('no-charset@example.org').then(function (result) {
   assert.strictEqual(
     result.content,
     'text content',
-    'Returns the mail content even if the charset is missing in Content-Type header'
+    'Handles Content-Type headers without charset definition'
   )
 })
 
