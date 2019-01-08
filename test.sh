@@ -1,15 +1,12 @@
 #!/bin/sh
 # shellcheck shell=dash
 
-SENDMAIL_SCRIPT="
-echo '$(cat mail/01.eml)' | mailhog sendmail
-echo '$(cat mail/02.eml)' | mailhog sendmail
-echo '$(cat mail/03.eml)' | mailhog sendmail
-"
-
 setup() {
   docker-compose up -d mailhog
-  docker-compose exec mailhog sh -c "$SENDMAIL_SCRIPT"
+  echo "$(cat mail/01.eml)" | docker-compose exec -T mailhog MailHog sendmail
+  echo "$(cat mail/02.eml)" | docker-compose exec -T mailhog MailHog sendmail
+  echo "$(cat mail/03.eml)" | docker-compose exec -T mailhog MailHog sendmail
+  echo "$(cat mail/04.eml)" | docker-compose exec -T mailhog MailHog sendmail
 }
 
 run_tests() {

@@ -64,12 +64,14 @@ function getContentPart (mail, typeRegExp) {
   for (let part of parts) {
     let type = (part.Headers['Content-Type'] || '').toString()
     if (typeRegExp.test(type)) {
+      let matches = /\bcharset=([\w_-]+)(?:;|$)/.exec(type)
+      let charset = matches ? matches[1] : undefined
       return {
         type: type,
         content: decode(
           part.Body,
           (part.Headers['Content-Transfer-Encoding'] || '').toString(),
-          /\bcharset=([\w_-]+)(?:;|$)/.exec(type)[1]
+          charset
         )
       }
     }
