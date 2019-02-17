@@ -1,13 +1,27 @@
-version: '2'
+version: '3.7'
 services:
   mailhog:
     image: blueimp/mailhog
-  test:
-    image: node:6-slim
-    entrypoint: node test.js
+    read_only: true
+  mailimport:
+    image: alpine:3.9
+    entrypoint: /opt/wait-for.sh mailhog:1025 --
+    command: /opt/sendmail.sh -S mailhog:1025
     user: nobody
-    working_dir: /srv/www/
+    read_only: true
     volumes:
-      - ".:/srv/www"
+      - .:/opt:ro
+    depends_on:
+      - mailhog
+  test:
+    build: .
+    init: true
+    command: index.test.js
+    read_only: true
     environment:
+      - WAIT_FOR_HOSTS=mailhog:1025
       - MAILHOG_API_URL=http://mailhog:8025/api/v2
+    volumes:
+      - .:/opt:ro
+    depends_on:
+      - mailimport
