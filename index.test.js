@@ -1,153 +1,29 @@
 'use strict'
 
-/* global describe, it */
+/* global before, after, describe, it */
 
+const path = require('path')
+const util = require('util')
+const exec = util.promisify(require('child_process').exec)
 const assert = require('assert')
+const env = process.env
 
 const mailhog = require('.')({
-  host: process.env.MAILHOG_HOST
+  host: env.MAILHOG_HOST
 })
 
-describe('messages', function () {
-  it('retrieve mails', async function () {
-    const result = await mailhog.messages()
-    assert.strictEqual(result.count, 4, 'Returns all emails')
-    assert.strictEqual(
-      result.items[0].subject,
-      'Mail without charset',
-      'Returns the decoded mail Subject header for the first mail in the set'
-    )
-    assert.strictEqual(
-      result.items[1].subject,
-      'ISO-8859-1',
-      'Returns the decoded mail Subject header for the second mail in the set'
-    )
-    assert.strictEqual(
-      result.items[2].subject,
-      '日本',
-      'Returns the decoded mail Subject header for the third mail in the set'
-    )
-    assert.strictEqual(
-      result.items[3].subject,
-      'üäö',
-      'Returns the decoded mail Subject header for the fourth mail in the set'
-    )
-  })
+async function sendAllMail () {
+  const sendmailScript = path.join(__dirname, 'sendmail.sh')
+  await exec(`${sendmailScript} -S ${env.MAILHOG_HOST}:1025`)
+}
 
-  it('limit the messages range', async function () {
-    const result = await mailhog.messages(3, 1)
-    assert.strictEqual(result.count, 1, 'Returns a set for the given range')
-    assert.strictEqual(
-      result.items[0].subject,
-      'üäö',
-      'Returns the decoded mail Subject header for mail from the given range'
-    )
-  })
-})
+async function deleteAllMail () {
+  const result = await mailhog.deleteAll()
+  assert.strictEqual(result.statusCode, 200, 'Responds with status code 200')
+}
 
-describe('search', function () {
-  it('search mails containing the query', async function () {
-    const result = await mailhog.search(
-      mailhog.encode('üäö', 'quoted-printable')
-    )
-    assert.strictEqual(result.count, 1, 'Returns a list of matching emails')
-    assert.strictEqual(
-      result.items[0].subject,
-      'üäö',
-      'Returns the decoded mail Subject header'
-    )
-  })
-
-  it('search mails from the given user', async function () {
-    const result = await mailhog.search('test@example.org', 'from')
-    assert.strictEqual(result.count, 4, 'Returns a list of matching emails')
-    assert.strictEqual(
-      result.items[0].subject,
-      'Mail without charset',
-      'Returns the decoded mail Subject header sent from the given user'
-    )
-  })
-
-  it('search mails to the given user', async function () {
-    const result = await mailhog.search('nihon@example.org', 'to')
-    assert.strictEqual(result.count, 1, 'Returns a list of matching emails')
-    assert.strictEqual(
-      result.items[0].subject,
-      '日本',
-      'Returns the decoded mail Subject header sent to the given user'
-    )
-  })
-
-  it('limit the search results range', async function () {
-    const result = await mailhog.search('example.org', undefined, 3, 1)
-    assert.strictEqual(result.count, 1, 'Returns a set for the given range')
-    assert.strictEqual(
-      result.items[0].subject,
-      'üäö',
-      'Returns the decoded mail Subject header for mail from the given range'
-    )
-  })
-})
-
-describe('latestFrom', function () {
-  it('latest mail from a given user', async function () {
-    const result = await mailhog.latestFrom('test@example.org')
-    assert.strictEqual(
-      result.from,
-      'Test <test@example.org>',
-      'Returns the decoded mail From header sent from the given user'
-    )
-  })
-})
-
-describe('latestTo', function () {
-  it('latest mail to a given user', async function () {
-    const result = await mailhog.latestTo('nihon@example.org')
-    assert.strictEqual(
-      result.to,
-      '日本 <nihon@example.org>',
-      'Returns the decoded mail To header sent to the given user'
-    )
-  })
-})
-
-describe('latestContaining', function () {
-  it('latest mail with the query text in the body content', async function () {
-    const result = await mailhog.latestContaining('text content')
-    assert.strictEqual(
-      result.text,
-      'text content',
-      'Returns the decoded plain text mail content containing the given query'
-    )
-  })
-
-  it('latest mail with query text in the Subject header', async function () {
-    const result = await mailhog.latestContaining('ISO-8859-1')
-    assert.strictEqual(
-      result.subject,
-      'ISO-8859-1',
-      'Returns the decoded mail Subject header containing the given query'
-    )
-  })
-
-  it('latest mail with the query text in the From header', async function () {
-    const result = await mailhog.latestContaining('test@example.org')
-    assert.strictEqual(
-      result.from,
-      'Test <test@example.org>',
-      'Returns the decoded mail From header containing the given query'
-    )
-  })
-
-  it('latest mail with the query text in the To header', async function () {
-    const result = await mailhog.latestContaining('nihon@example.org')
-    assert.strictEqual(
-      result.to,
-      '日本 <nihon@example.org>',
-      'Returns the decoded mail To header containing the given query'
-    )
-  })
-})
+before(sendAllMail)
+after(deleteAllMail)
 
 describe('encode', function () {
   it('quoted-printable encoding of utf8 string', function () {
@@ -372,6 +248,225 @@ describe('headers', function () {
     assert.ok(
       result.deliveryDate > result.date,
       'Returns mail with Delivery-Date later than Date'
+    )
+  })
+})
+
+describe('messages', function () {
+  it('retrieve mails', async function () {
+    const result = await mailhog.messages()
+    assert.strictEqual(result.count, 4, 'Returns all emails')
+    assert.strictEqual(
+      result.items[0].subject,
+      'Mail without charset',
+      'Returns the decoded mail Subject header for the first mail in the set'
+    )
+    assert.strictEqual(
+      result.items[1].subject,
+      'ISO-8859-1',
+      'Returns the decoded mail Subject header for the second mail in the set'
+    )
+    assert.strictEqual(
+      result.items[2].subject,
+      '日本',
+      'Returns the decoded mail Subject header for the third mail in the set'
+    )
+    assert.strictEqual(
+      result.items[3].subject,
+      'üäö',
+      'Returns the decoded mail Subject header for the fourth mail in the set'
+    )
+  })
+
+  it('limit the messages range', async function () {
+    const result = await mailhog.messages(3, 1)
+    assert.strictEqual(result.count, 1, 'Returns a set for the given range')
+    assert.strictEqual(
+      result.items[0].subject,
+      'üäö',
+      'Returns the decoded mail Subject header for mail from the given range'
+    )
+  })
+})
+
+describe('search', function () {
+  it('search mails containing the query', async function () {
+    const result = await mailhog.search(
+      mailhog.encode('üäö', 'quoted-printable')
+    )
+    assert.strictEqual(result.count, 1, 'Returns a list of matching emails')
+    assert.strictEqual(
+      result.items[0].subject,
+      'üäö',
+      'Returns the decoded mail Subject header'
+    )
+  })
+
+  it('search mails from the given user', async function () {
+    const result = await mailhog.search('test@example.org', 'from')
+    assert.strictEqual(result.count, 4, 'Returns a list of matching emails')
+    assert.strictEqual(
+      result.items[0].subject,
+      'Mail without charset',
+      'Returns the decoded mail Subject header sent from the given user'
+    )
+  })
+
+  it('search mails to the given user', async function () {
+    const result = await mailhog.search('nihon@example.org', 'to')
+    assert.strictEqual(result.count, 1, 'Returns a list of matching emails')
+    assert.strictEqual(
+      result.items[0].subject,
+      '日本',
+      'Returns the decoded mail Subject header sent to the given user'
+    )
+  })
+
+  it('limit the search results range', async function () {
+    const result = await mailhog.search('example.org', undefined, 3, 1)
+    assert.strictEqual(result.count, 1, 'Returns a set for the given range')
+    assert.strictEqual(
+      result.items[0].subject,
+      'üäö',
+      'Returns the decoded mail Subject header for mail from the given range'
+    )
+  })
+})
+
+describe('latestFrom', function () {
+  it('latest mail from a given user', async function () {
+    const result = await mailhog.latestFrom('test@example.org')
+    assert.strictEqual(
+      result.from,
+      'Test <test@example.org>',
+      'Returns the decoded mail From header sent from the given user'
+    )
+  })
+})
+
+describe('latestTo', function () {
+  it('latest mail to a given user', async function () {
+    const result = await mailhog.latestTo('nihon@example.org')
+    assert.strictEqual(
+      result.to,
+      '日本 <nihon@example.org>',
+      'Returns the decoded mail To header sent to the given user'
+    )
+  })
+})
+
+describe('latestContaining', function () {
+  it('latest mail with the query text in the body content', async function () {
+    const result = await mailhog.latestContaining('text content')
+    assert.strictEqual(
+      result.text,
+      'text content',
+      'Returns the decoded plain text mail content containing the given query'
+    )
+  })
+
+  it('latest mail with query text in the Subject header', async function () {
+    const result = await mailhog.latestContaining('ISO-8859-1')
+    assert.strictEqual(
+      result.subject,
+      'ISO-8859-1',
+      'Returns the decoded mail Subject header containing the given query'
+    )
+  })
+
+  it('latest mail with the query text in the From header', async function () {
+    const result = await mailhog.latestContaining('test@example.org')
+    assert.strictEqual(
+      result.from,
+      'Test <test@example.org>',
+      'Returns the decoded mail From header containing the given query'
+    )
+  })
+
+  it('latest mail with the query text in the To header', async function () {
+    const result = await mailhog.latestContaining('nihon@example.org')
+    assert.strictEqual(
+      result.to,
+      '日本 <nihon@example.org>',
+      'Returns the decoded mail To header containing the given query'
+    )
+  })
+})
+
+describe('releaseMessage', function () {
+  after(deleteAllMail)
+  after(sendAllMail)
+
+  it('releases the given mail to an outgoing SMTP server', async function () {
+    const result = await mailhog.latestTo('nihon@example.org')
+    const response = await mailhog.releaseMessage(result.ID, {
+      host: 'localhost',
+      port: '1025',
+      email: 'nihon@example.org'
+    })
+    assert.strictEqual(
+      response.statusCode,
+      200,
+      'Responds with status code 200'
+    )
+    const newResult = await mailhog.latestTo('nihon@example.org')
+    assert.notStrictEqual(
+      result.ID,
+      newResult.ID,
+      'New search for the same query returns a new ID'
+    )
+    const listResult = await mailhog.messages()
+    assert.strictEqual(
+      listResult.count,
+      5,
+      'Number of mails stored has increased by 1'
+    )
+  })
+})
+
+describe('deleteMessage', function () {
+  after(deleteAllMail)
+  after(sendAllMail)
+
+  it('deletes the given mail from MailHog storage', async function () {
+    const result = await mailhog.latestTo('nihon@example.org')
+    const response = await mailhog.deleteMessage(result.ID)
+    assert.strictEqual(
+      response.statusCode,
+      200,
+      'Responds with status code 200'
+    )
+    const newResult = await mailhog.latestTo('nihon@example.org')
+    assert.strictEqual(
+      newResult,
+      0,
+      'New search for the deleted mail returns 0'
+    )
+    const listResult = await mailhog.messages()
+    assert.strictEqual(
+      listResult.count,
+      3,
+      'Number of mails stored has decreased by 1'
+    )
+  })
+})
+
+describe('deleteAll', function () {
+  after(deleteAllMail)
+  after(sendAllMail)
+
+  it('deletes all mail from MailHog storage', async function () {
+    const response = await mailhog.deleteAll()
+    assert.strictEqual(
+      response.statusCode,
+      200,
+      'Responds with status code 200'
+    )
+    const listResult = await mailhog.messages()
+    assert.strictEqual(
+      listResult.count,
+      0,
+      'Number of mails stored has decreased to 0'
     )
   })
 })

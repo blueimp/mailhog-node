@@ -34,16 +34,31 @@
     + [Parameters](#parameters-5)
     + [Returns](#returns-5)
     + [Example](#example-5)
-  * [encode](#encode)
+  * [releaseMessage](#releasemessage)
     + [Description](#description-6)
     + [Parameters](#parameters-6)
     + [Returns](#returns-6)
     + [Example](#example-6)
-  * [decode](#decode)
+  * [deleteMessage](#deletemessage)
     + [Description](#description-7)
     + [Parameters](#parameters-7)
     + [Returns](#returns-7)
     + [Example](#example-7)
+  * [deleteAll](#deleteall)
+    + [Description](#description-8)
+    + [Parameters](#parameters-8)
+    + [Returns](#returns-8)
+    + [Example](#example-8)
+  * [encode](#encode)
+    + [Description](#description-9)
+    + [Parameters](#parameters-9)
+    + [Returns](#returns-9)
+    + [Example](#example-9)
+  * [decode](#decode)
+    + [Description](#description-10)
+    + [Parameters](#parameters-10)
+    + [Returns](#returns-10)
+    + [Example](#example-10)
 - [License](#license)
 - [Author](#author)
 
@@ -84,6 +99,9 @@ Returns the `mailhog` API object with the following properties:
   latestFrom: Function,
   latestTo: Function,
   latestContaining: Function,
+  releaseMessage: Function,
+  deleteMessage: Function,
+  deleteAll: Function,
   encode: Function,
   decode: Function
 }
@@ -131,10 +149,11 @@ The resolved result has the following properties:
 }
 ```
 
-The individual mail object items have the following getters:
+The individual mail object items have the following properties:
 
 ```js
 {
+  ID: String,         // Mail ID
   text: String,       // Decoded mail text content
   html: String,       // Decoded mail HTML content
   subject: String,    // Decoded mail Subject header
@@ -195,10 +214,11 @@ The resolved result has the following properties:
 }
 ```
 
-The individual mail object items have the following getters:
+The individual mail object items have the following properties:
 
 ```js
 {
+  ID: String,         // Mail ID
   text: String,       // Decoded mail text content
   html: String,       // Decoded mail HTML content
   subject: String,    // Decoded mail Subject header
@@ -244,10 +264,11 @@ query | String | yes      | from address
 #### Returns
 Returns a `Promise` that resolves with an `Object`.
 
-The resolved mail object has the following getters:
+The resolved mail object has the following properties:
 
 ```js
 {
+  ID: String,         // Mail ID
   text: String,       // Decoded mail text content
   html: String,       // Decoded mail HTML content
   subject: String,    // Decoded mail Subject header
@@ -291,10 +312,11 @@ query | String | yes      | to address
 #### Returns
 Returns a `Promise` that resolves with an `Object`.
 
-The resolved mail object has the following getters:
+The resolved mail object has the following properties:
 
 ```js
 {
+  ID: String,         // Mail ID
   text: String,       // Decoded mail text content
   html: String,       // Decoded mail HTML content
   subject: String,    // Decoded mail Subject header
@@ -338,10 +360,11 @@ query | String | yes      | search query
 #### Returns
 Returns a `Promise` that resolves with an `Object`.
 
-The resolved mail object has the following getters:
+The resolved mail object has the following properties:
 
 ```js
 {
+  ID: String,         // Mail ID
   text: String,       // Decoded mail text content
   html: String,       // Decoded mail HTML content
   subject: String,    // Decoded mail Subject header
@@ -366,6 +389,98 @@ async function example () {
   console.log('To: ', result.to)
   console.log('Subject: ', result.subject)
   console.log('Content: ', result.text)
+}
+```
+
+### releaseMessage
+```
+mailhog.releaseMessage(id, config) → Promise 
+```
+
+#### Description
+Releases the mail with the given ID using the provided SMTP config.
+
+#### Parameters
+Name             | Type   | Required | Description
+---------------- | ------ | -------- | ---------------------------------------
+id               | String | yes      | message ID
+config           | Object | yes      | SMTP configuration
+config.host      | String | yes      | SMTP host
+config.port      | String | yes      | SMTP port
+config.email     | String | yes      | recipient email
+config.username  | String | no       | SMTP username
+config.password  | String | no       | SMTP password
+config.mechanism | String | no       | SMTP auth mechanism (PLAIN or CRAM-MD5)
+
+#### Returns
+Returns a `Promise` that resolves with an
+[http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage)
+object.
+
+#### Example
+```js
+async function example () {
+  const result = await mailhog.latestTo('test@example.org')
+
+  const response = await mailhog.releaseMessage(result.ID, {
+    host: 'localhost',
+    port: '1025',
+    email: 'test@example.org'
+  })
+}
+```
+
+### deleteMessage
+```
+mailhog.deleteMessage(id) → Promise 
+```
+
+#### Description
+Deletes the mail with the given ID from MailHog.
+
+#### Parameters
+Name | Type   | Required | Description
+---- | ------ | -------- | -----------
+id   | String | yes      | message ID
+
+#### Returns
+Returns a `Promise` that resolves with an
+[http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage)
+object.
+
+#### Example
+```js
+async function example () {
+  const result = await mailhog.latestTo('test@example.org')
+
+  const response = await mailhog.deleteMessage(result.ID)
+
+  console.log('Status code: ', response.statusCode)
+}
+```
+
+### deleteAll
+```
+mailhog.deleteAll() → Promise 
+```
+
+#### Description
+Deletes all mails stored in MailHog.
+
+#### Parameters
+None
+
+#### Returns
+Returns a `Promise` that resolves with an
+[http.IncomingMessage](https://nodejs.org/api/http.html#http_class_http_incomingmessage)
+object.
+
+#### Example
+```js
+async function example () {
+  const response = await mailhog.deleteAll()
+
+  console.log('Status code: ', response.statusCode)
 }
 ```
 

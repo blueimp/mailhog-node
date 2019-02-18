@@ -242,7 +242,7 @@ function getDeliveryDate () {
 /**
  * Injects convenience properties for each mail item in the given result.
  * @param {Object} result Result object for a MailHog API search/messages query
- * @returns {Object} Same result object with injected props for each mail item
+ * @returns {Object} Result object with injected properties for each mail item
  */
 function injectProperties (result) {
   if (!result.count) return result
@@ -274,16 +274,18 @@ function injectProperties (result) {
 /**
  * Sends a http.request and resolves with the parsed JSON response.
  * @param {String} options http.request options
- * @returns {Promise} resolves with JSON data
+ * @param {String} [data] POST data
+ * @returns {Promise} resolves with JSON or http.IncomingMessage if no body
  */
-function request (options) {
+function request (options, data) {
   return new Promise((resolve, reject) => {
-    http
+    const req = http
       .request(options, response => {
         let body = ''
         response
           .on('data', chunk => (body += chunk))
           .on('end', () => {
+            if (!body) return resolve(response)
             try {
               resolve(JSON.parse(body))
             } catch (error) {
@@ -292,7 +294,8 @@ function request (options) {
           })
       })
       .on('error', reject)
-      .end()
+    if (data) req.write(data)
+    req.end()
   })
 }
 
@@ -361,12 +364,57 @@ function latestContaining (query) {
 }
 
 /**
+ * Releases the mail with the given ID using the provided SMTP config.
+ * @param {String} id message ID
+ * @param {Object} config SMTP configuration
+ * @property {String} config.host SMTP host
+ * @property {String} config.port SMTP port
+ * @property {String} config.email recipient email
+ * @property {String} [config.username] SMTP username
+ * @property {String} [config.password] SMTP password
+ * @property {String} [config.mechanism] SMTP auth mechanism (PLAIN or CRAM-MD5)
+ * @returns {Promise} resolves with http.IncomingMessage
+ */
+function releaseMessage (id, config) {
+  const options = Object.assign({}, this.options, {
+    method: 'POST',
+    path: '/api/v1/messages/' + encodeURIComponent(id) + '/release'
+  })
+  return request(options, JSON.stringify(config))
+}
+
+/**
+ * Deletes the mail with the given ID from MailHog.
+ * @param {String} id message ID
+ * @returns {Promise} resolves with http.IncomingMessage
+ */
+function deleteMessage (id) {
+  const options = Object.assign({}, this.options, {
+    method: 'DELETE',
+    path: '/api/v1/messages/' + encodeURIComponent(id)
+  })
+  return request(options)
+}
+
+/**
+ * Deletes all mails stored in MailHog.
+ * @returns {Promise} resolves with http.IncomingMessage
+ */
+function deleteAll () {
+  const options = Object.assign({}, this.options, {
+    method: 'DELETE',
+    path: '/api/v1/messages'
+  })
+  return request(options)
+}
+
+/**
  * Returns the mailhog API interface.
  * @param {Object} [options] API options
- * @property {string} [options.protocol=http:] API protocol
- * @property {string} [options.host=localhost] API host
- * @property {string} [options.port=8025] API port
- * @property {string} [options.auth] API basic authentication
+ * @property {String} [options.protocol=http:] API protocol
+ * @property {String} [options.host=localhost] API host
+ * @property {String} [options.port=8025] API port
+ * @property {String} [options.auth] API basic authentication
  * @returns {Object} API object
  */
 function mailhog (options) {
@@ -377,6 +425,9 @@ function mailhog (options) {
     latestFrom,
     latestTo,
     latestContaining,
+    releaseMessage,
+    deleteMessage,
+    deleteAll,
     encode,
     decode
   }

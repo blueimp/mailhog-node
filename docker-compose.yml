@@ -3,16 +3,6 @@ services:
   mailhog:
     image: blueimp/mailhog
     read_only: true
-  mailimport:
-    image: alpine:3.9
-    entrypoint: /opt/wait-for.sh mailhog:1025 --
-    command: /opt/sendmail.sh -S mailhog:1025
-    user: nobody
-    read_only: true
-    volumes:
-      - .:/opt:ro
-    depends_on:
-      - mailhog
   test:
     build: .
     init: true
@@ -24,4 +14,4 @@ services:
     volumes:
       - .:/opt:ro
     depends_on:
-      - mailimport
+      - mailhog
