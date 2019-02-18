@@ -274,7 +274,7 @@ function injectProperties (result) {
 /**
  * Sends a http.request and resolves with the parsed JSON response.
  * @param {String} options http.request options
- * @returns {Promise} Promise for the parsed JSON data
+ * @returns {Promise} resolves with JSON data
  */
 function request (options) {
   return new Promise((resolve, reject) => {
@@ -300,14 +300,14 @@ function request (options) {
  * Requests mail objects from the MailHog API.
  * @param {Number} [start=0] defines the offset for the messages query
  * @param {Number} [limit=50] defines the max number of results
- * @returns {Object} Object with items property listing the mail objects
+ * @returns {Promise} resolves with object listing the mail items
  */
 function messages (start, limit) {
   let path = '/api/v2/messages'
   if (start) path += `?start=${start}`
   if (limit) path += `${start ? '&' : '?'}limit=${limit}`
-  const requestOptions = Object.assign({}, this.options, { path })
-  return request(requestOptions).then(result => injectProperties(result))
+  const options = Object.assign({}, this.options, { path })
+  return request(options).then(result => injectProperties(result))
 }
 
 /**
@@ -316,21 +316,21 @@ function messages (start, limit) {
  * @param {String} [kind=containing] query kind, can be from|to|containing
  * @param {Number} [start=0] defines the offset for the search query
  * @param {Number} [limit=50] defines the max number of results
- * @returns {Object} Object with items property listing the mail objects
+ * @returns {Promise} resolves with object listing the mail items
  */
 function search (query, kind, start, limit) {
   query = encodeURIComponent(query)
   let path = `/api/v2/search?kind=${kind || 'containing'}&query=${query}`
   if (start) path += `&start=${start}`
   if (limit) path += `&limit=${limit}`
-  const requestOptions = Object.assign({}, this.options, { path })
-  return request(requestOptions).then(result => injectProperties(result))
+  const options = Object.assign({}, this.options, { path })
+  return request(options).then(result => injectProperties(result))
 }
 
 /**
  * Sends a search request for the latest mail matching the "from" query.
  * @param {String} query from address
- * @returns {Object} Latest mail object for the given "from" query
+ * @returns {Promise} resolves with the latest mail object for the "from" query
  */
 function latestFrom (query) {
   return this.search(query, 'from', 0, 1).then(
@@ -341,7 +341,7 @@ function latestFrom (query) {
 /**
  * Sends a search request for the latest mail matching the "to" query.
  * @param {String} query to address
- * @returns {Object} Latest mail object for the given "to" query
+ * @returns {Promise} resolves with the latest mail object for the "to" query
  */
 function latestTo (query) {
   return this.search(query, 'to', 0, 1).then(
@@ -352,7 +352,7 @@ function latestTo (query) {
 /**
  * Sends a search request for the latest mail matching the "containing" query.
  * @param {String} query search query
- * @returns {Object} Latest mail object for the given "containing" query
+ * @returns {Promise} resolves with latest mail object for "containing" query
  */
 function latestContaining (query) {
   return this.search(query, 'containing', 0, 1).then(
