@@ -20,7 +20,7 @@ services:
     read_only: true
     environment:
       - WAIT_FOR_HOSTS=mailhog:1025
-      - MAILHOG_API_URL=http://mailhog:8025/api/v2
+      - MAILHOG_HOST=mailhog
     volumes:
       - .:/opt:ro
     depends_on:

@@ -5,7 +5,7 @@
 const assert = require('assert')
 
 const mailhog = require('.')({
-  apiURL: process.env.MAILHOG_API_URL
+  host: process.env.MAILHOG_HOST
 })
 
 describe('messages', function () {

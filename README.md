@@ -4,69 +4,104 @@
 
 - [Installation](#installation)
 - [Initialization](#initialization)
+  * [Description](#description)
+  * [Parameters](#parameters)
+  * [Returns](#returns)
+  * [Example](#example)
 - [API](#api)
   * [messages](#messages)
-    + [Description](#description)
-    + [Parameters](#parameters)
-    + [Returns](#returns)
-    + [Example](#example)
-  * [search](#search)
     + [Description](#description-1)
     + [Parameters](#parameters-1)
     + [Returns](#returns-1)
     + [Example](#example-1)
-  * [latestFrom](#latestfrom)
+  * [search](#search)
     + [Description](#description-2)
     + [Parameters](#parameters-2)
     + [Returns](#returns-2)
     + [Example](#example-2)
-  * [latestTo](#latestto)
+  * [latestFrom](#latestfrom)
     + [Description](#description-3)
     + [Parameters](#parameters-3)
     + [Returns](#returns-3)
     + [Example](#example-3)
-  * [latestContaining](#latestcontaining)
+  * [latestTo](#latestto)
     + [Description](#description-4)
     + [Parameters](#parameters-4)
     + [Returns](#returns-4)
     + [Example](#example-4)
-  * [encode](#encode)
+  * [latestContaining](#latestcontaining)
     + [Description](#description-5)
     + [Parameters](#parameters-5)
     + [Returns](#returns-5)
     + [Example](#example-5)
-  * [decode](#decode)
+  * [encode](#encode)
     + [Description](#description-6)
     + [Parameters](#parameters-6)
     + [Returns](#returns-6)
     + [Example](#example-6)
+  * [decode](#decode)
+    + [Description](#description-7)
+    + [Parameters](#parameters-7)
+    + [Returns](#returns-7)
+    + [Example](#example-7)
 - [License](#license)
 - [Author](#author)
 
 ## Installation
+
 ```sh
 npm install mailhog
 ```
 
 ## Initialization
+
+```
+require('mailhog')(options) → Object 
+```
+
+### Description
 The `mailhog` module returns an initialization function.  
-This function accepts an options object that must include the `apiURL` as
-property.  
-The current version of this library supports the
-[MailHog API v2](https://github.com/mailhog/MailHog/blob/master/docs/APIv2.md):
+This function accepts an optional `options` object that is used for
+[http.request](https://nodejs.org/api/http.html#http_http_request_options_callback)
+calls to the MailHog API and returns the `mailhog` API object.
+
+### Parameters
+Name             | Type   | Required | Default   | Description
+---------------- | ------ | -------- | --------- | ------------------------
+options.protocol | String | no       | http:     | API protocol
+options.host     | String | no       | localhost | API host
+options.port     | Number | no       | 8025      | API port
+options.auth     | String | no       |           | API basic authentication
+
+### Returns
+Returns the `mailhog` API object with the following properties:
+
+```js
+{
+  options: Object,
+  messages: Function,
+  search: Function,
+  latestFrom: Function,
+  latestTo: Function,
+  latestContaining: Function,
+  encode: Function,
+  decode: Function
+}
+```
+
+### Example
 
 ```js
 const mailhog = require('mailhog')({
-  apiURL: 'http://mailhog:8025/api/v2'
+  host: 'mailhog'
 })
+
+mailhog.messages().then(result => console.log(result))
 ```
 
-Replace `mailhog` in the `apiURL` with the hostname to your MailHog instance.
-
-The object returned by the initialization function is the `mailhog` API object
-that is used in the following examples.
-
 ## API
+The following API descriptions assume that the `mailhog` API object has been
+initialized.
 
 ### messages
 ```

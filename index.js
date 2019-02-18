@@ -11,6 +11,7 @@
  * https://opensource.org/licenses/MIT
  */
 
+const http = require('http')
 const libqp = require('./libqp')
 
 /**
@@ -271,20 +272,17 @@ function injectProperties (result) {
 }
 
 /**
- * Sends a GET request to the given URL.
- * @param {String} url Target URL to retrieve data from
+ * Sends a http.request and resolves with the parsed JSON response.
+ * @param {String} options http.request options
  * @returns {Promise} Promise for the parsed JSON data
  */
-function fetch (url) {
-  const http = url.startsWith('https') ? 'https' : 'http'
+function request (options) {
   return new Promise((resolve, reject) => {
-    require(http)
-      .get(url, response => {
+    http
+      .request(options, response => {
         let body = ''
         response
-          .on('data', chunk => {
-            body += chunk
-          })
+          .on('data', chunk => (body += chunk))
           .on('end', () => {
             try {
               resolve(JSON.parse(body))
@@ -294,6 +292,7 @@ function fetch (url) {
           })
       })
       .on('error', reject)
+      .end()
   })
 }
 
@@ -304,10 +303,11 @@ function fetch (url) {
  * @returns {Object} Object with items property listing the mail objects
  */
 function messages (start, limit) {
-  let url = `${this.apiURL}/messages`
-  if (start) url += `?start=${start}`
-  if (limit) url += `${start ? '&' : '?'}limit=${limit}`
-  return fetch(url).then(result => injectProperties(result))
+  let path = '/api/v2/messages'
+  if (start) path += `?start=${start}`
+  if (limit) path += `${start ? '&' : '?'}limit=${limit}`
+  const requestOptions = Object.assign({}, this.options, { path })
+  return request(requestOptions).then(result => injectProperties(result))
 }
 
 /**
@@ -320,10 +320,11 @@ function messages (start, limit) {
  */
 function search (query, kind, start, limit) {
   query = encodeURIComponent(query)
-  let url = `${this.apiURL}/search?kind=${kind || 'containing'}&query=${query}`
-  if (start) url += `&start=${start}`
-  if (limit) url += `&limit=${limit}`
-  return fetch(url).then(result => injectProperties(result))
+  let path = `/api/v2/search?kind=${kind || 'containing'}&query=${query}`
+  if (start) path += `&start=${start}`
+  if (limit) path += `&limit=${limit}`
+  const requestOptions = Object.assign({}, this.options, { path })
+  return request(requestOptions).then(result => injectProperties(result))
 }
 
 /**
@@ -361,13 +362,16 @@ function latestContaining (query) {
 
 /**
  * Returns the mailhog API interface.
- * @param {Object} [options] mailhog API options, currently only apiURL
- * @returns {Object} mailhog API object
+ * @param {Object} [options] API options
+ * @property {string} [options.protocol=http:] API protocol
+ * @property {string} [options.host=localhost] API host
+ * @property {string} [options.port=8025] API port
+ * @property {string} [options.auth] API basic authentication
+ * @returns {Object} API object
  */
 function mailhog (options) {
-  const apiURL = options && options.apiURL
   return {
-    apiURL,
+    options: Object.assign({ port: 8025 }, options),
     messages,
     search,
     latestFrom,
