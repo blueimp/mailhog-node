@@ -1,16 +1,12 @@
 'use strict'
 /* eslint-disable no-useless-escape */
 
-const util = require('util')
-const { Transform } = require('stream')
 
 // expose to the world
 module.exports = {
   encode: encode,
   decode: decode,
-  wrap: wrap,
-  Encoder: Encoder,
-  Decoder: Decoder
+  wrap: wrap
 }
 
 /**
@@ -211,128 +207,4 @@ function checkRanges (nr, ranges) {
     }
   }
   return false
-}
-
-/**
- * Creates a transform stream for encoding data to Quoted-Printable encoding
- *
- * @constructor
- * @param {Object} options Stream options
- * @param {Number} [options.lineLength=76] Maximum lenght for lines
- */
-function Encoder (options) {
-  // init Transform
-  this.options = options || {}
-
-  if (this.options.lineLength !== false) {
-    this.options.lineLength = this.options.lineLength || 76
-  }
-
-  this._curLine = ''
-
-  this.inputBytes = 0
-  this.outputBytes = 0
-
-  Transform.call(this, this.options)
-}
-util.inherits(Encoder, Transform)
-
-Encoder.prototype._transform = function (chunk, encoding, done) {
-  const _self = this
-  let qp
-
-  if (encoding !== 'buffer') {
-    chunk = Buffer.from(chunk, encoding)
-  }
-
-  if (!chunk || !chunk.length) {
-    return done()
-  }
-
-  this.inputBytes += chunk.length
-
-  if (this.options.lineLength) {
-    qp = this._curLine + encode(chunk)
-    qp = wrap(qp, this.options.lineLength)
-    qp = qp.replace(/(^|\n)([^\n]*)$/, function (match, lineBreak, lastLine) {
-      _self._curLine = lastLine
-      return lineBreak
-    })
-
-    if (qp) {
-      this.outputBytes += qp.length
-      this.push(qp)
-    }
-  } else {
-    qp = encode(chunk)
-    this.outputBytes += qp.length
-    this.push(qp, 'ascii')
-  }
-
-  done()
-}
-
-Encoder.prototype._flush = function (done) {
-  if (this._curLine) {
-    this.outputBytes += this._curLine.length
-    this.push(this._curLine, 'ascii')
-  }
-  done()
-}
-
-/**
- * Creates a transform stream for decoding Quoted-Printable encoded strings
- *
- * @constructor
- * @param {Object} options Stream options
- */
-function Decoder (options) {
-  // init Transform
-  this.options = options || {}
-  this._curLine = ''
-
-  this.inputBytes = 0
-  this.outputBytes = 0
-
-  Transform.call(this, this.options)
-}
-util.inherits(Decoder, Transform)
-
-Decoder.prototype._transform = function (chunk, encoding, done) {
-  const _self = this
-  let qp
-  let buf
-
-  chunk = chunk.toString('ascii')
-
-  if (!chunk || !chunk.length) {
-    return done()
-  }
-
-  this.inputBytes += chunk.length
-
-  qp = this._curLine + chunk
-  this._curLine = ''
-  qp = qp.replace(/=[^\n]?$/, function (lastLine) {
-    _self._curLine = lastLine
-    return ''
-  })
-
-  if (qp) {
-    buf = decode(qp)
-    this.outputBytes += buf.length
-    this.push(buf)
-  }
-
-  done()
-}
-
-Decoder.prototype._flush = function (done) {
-  let buf
-  if (this._curLine) {
-    buf = decode(this._curLine)
-    this.outputBytes += buf.length
-    this.push(buf)
-  }
-  done()
 }
