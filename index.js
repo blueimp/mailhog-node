@@ -1,5 +1,3 @@
-'use strict'
-
 /*
  * NodeJS library to interact with the MailHog API.
  * https://github.com/blueimp/mailhog-node
@@ -10,6 +8,9 @@
  * Licensed under the MIT license:
  * https://opensource.org/licenses/MIT
  */
+
+// @ts-check
+'use strict'
 
 const http = require('http')
 const libqp = require('./libqp')
@@ -35,7 +36,7 @@ function wrap (str, lineLength) {
  * @param {String} str String to encode
  * @param {String} encoding base64|quoted-printable
  * @param {String} [charset=utf8] Charset of the input string
- * @param {Number|Boolean} [lineBreak=76] Soft line break limit
+ * @param {Number} [lineLength=76] Soft line break limit
  * @returns {String} Encoded String
  */
 function encode (str, encoding, charset, lineLength) {
@@ -63,21 +64,22 @@ function encode (str, encoding, charset, lineLength) {
 /**
  * Decodes a String from the given encoding and outputs it in the given charset.
  * @param {String} str String to decode
- * @param {String} encoding base64|quoted-printable
+ * @param {String} [encoding=utf8] input encoding, e.g. base64|quoted-printable
  * @param {String} [charset=utf8] Charset to use for the output
  * @returns {String} Decoded String
  */
 function decode (str, encoding, charset) {
   let buffer
-  switch ((encoding || '').toLowerCase()) {
-    case 'base64':
-      buffer = Buffer.from(str, 'base64')
-      break
-    case 'quoted-printable':
-      buffer = libqp.decode(str)
-      break
-    default:
-      buffer = str
+  if (encoding) {
+    encoding = encoding.toLowerCase()
+    // 7bit|8bit|binary are not encoded, x-token has an unknown encoding, see:
+    // https://www.w3.org/Protocols/rfc1341/5_Content-Transfer-Encoding.html
+    if (/^(7|8)bit|binary|x-.+$/.test(encoding)) return str
+  }
+  if (encoding === 'quoted-printable') {
+    buffer = libqp.decode(str)
+  } else {
+    buffer = Buffer.from(str, encoding)
   }
   if (!charset || /^utf-?8$/i.test(charset)) {
     return buffer.toString()
@@ -134,16 +136,8 @@ function headerDecoder (_, charset, encoding, data) {
  * @returns {String} Header content
  */
 function getHeader (mail, key) {
-  if (key === 'Delivery-Date') {
-    // MailHog does not set the Delivery-Date header, but it sets a Created
-    // property that serves the same purpose (delivery date to application):
-    return new Date(Date.parse(mail.Created))
-  }
   const header = mail.Content.Headers[key]
   if (!header || !header.length) return
-  if (key === 'Date') {
-    return new Date(Date.parse(header[0]))
-  }
   // Encoded header parts have the following form:
   // =?charset?encoding?data?=
   return header[0].replace(/=\?([^?]+)\?([BbQq])\?([^?]+)\?=/g, headerDecoder)
@@ -199,8 +193,8 @@ function getTo () {
  * @returns {String} Decoded mail Cc header
  */
 function getCc () {
-  delete this.to
-  return (this.to = getHeader(this, 'Cc'))
+  delete this.cc
+  return (this.cc = getHeader(this, 'Cc'))
 }
 
 /**
@@ -208,8 +202,8 @@ function getCc () {
  * @returns {String} Decoded mail Bcc header
  */
 function getBcc () {
-  delete this.to
-  return (this.to = getHeader(this, 'Bcc'))
+  delete this.bcc
+  return (this.bcc = getHeader(this, 'Bcc'))
 }
 
 /**
@@ -217,8 +211,8 @@ function getBcc () {
  * @returns {String} Decoded mail Reply-To header
  */
 function getReplyTo () {
-  delete this.to
-  return (this.to = getHeader(this, 'Reply-To'))
+  delete this.replyTo
+  return (this.replyTo = getHeader(this, 'Reply-To'))
 }
 
 /**
@@ -226,8 +220,10 @@ function getReplyTo () {
  * @returns {Date} Mail Date header
  */
 function getDate () {
-  delete this.to
-  return (this.to = getHeader(this, 'Date'))
+  delete this.date
+  const dateString = getHeader(this, 'Date')
+  if (dateString) this.date = new Date(Date.parse(dateString))
+  return this.date
 }
 
 /**
@@ -235,8 +231,10 @@ function getDate () {
  * @returns {Date} Mail Delivery-Date header
  */
 function getDeliveryDate () {
-  delete this.to
-  return (this.to = getHeader(this, 'Delivery-Date'))
+  delete this.deliveryDate
+  // MailHog does not set the Delivery-Date header, but it sets a Created
+  // property that serves the same purpose (delivery date to application):
+  return (this.deliveryDate = new Date(Date.parse(this.Created)))
 }
 
 /**
@@ -300,10 +298,33 @@ function request (options, data) {
 }
 
 /**
+ * @typedef {Object} Message
+ * @property {string} ID Message ID
+ * @property {string} text Decoded mail text content
+ * @property {string} html Decoded mail HTML content
+ * @property {string} subject Decoded mail Subject header
+ * @property {string} from Decoded mail From header
+ * @property {string} to Decoded mail To header
+ * @property {string} cc Decoded mail Cc header
+ * @property {string} bcc Decoded mail Bcc header
+ * @property {string} replyTo Decoded mail Reply-To header
+ * @property {Date} date Mail Date header
+ * @property {Date} deliveryDate Mail Delivery-Date header
+ */
+
+/**
+ * @typedef {Object} Messages
+ * @property {number} total Number of results available
+ * @property {number} count Number of results returned
+ * @property {number} start Offset for the range of results returned
+ * @property {Array<Message>} items List of mail object items
+ */
+
+/**
  * Requests mail objects from the MailHog API.
  * @param {Number} [start=0] defines the offset for the messages query
  * @param {Number} [limit=50] defines the max number of results
- * @returns {Promise} resolves with object listing the mail items
+ * @returns {Promise<Messages>} resolves with object listing the mail items
  */
 function messages (start, limit) {
   let path = '/api/v2/messages'
@@ -319,7 +340,7 @@ function messages (start, limit) {
  * @param {String} [kind=containing] query kind, can be from|to|containing
  * @param {Number} [start=0] defines the offset for the search query
  * @param {Number} [limit=50] defines the max number of results
- * @returns {Promise} resolves with object listing the mail items
+ * @returns {Promise<Messages>} resolves with object listing the mail items
  */
 function search (query, kind, start, limit) {
   query = encodeURIComponent(query)
@@ -333,7 +354,7 @@ function search (query, kind, start, limit) {
 /**
  * Sends a search request for the latest mail matching the "from" query.
  * @param {String} query from address
- * @returns {Promise} resolves with the latest mail object for the "from" query
+ * @returns {Promise<Message>} resolves latest mail object for the "from" query
  */
 function latestFrom (query) {
   return this.search(query, 'from', 0, 1).then(
@@ -344,7 +365,7 @@ function latestFrom (query) {
 /**
  * Sends a search request for the latest mail matching the "to" query.
  * @param {String} query to address
- * @returns {Promise} resolves with the latest mail object for the "to" query
+ * @returns {Promise<Message>} resolves latest mail object for the "to" query
  */
 function latestTo (query) {
   return this.search(query, 'to', 0, 1).then(
@@ -355,7 +376,7 @@ function latestTo (query) {
 /**
  * Sends a search request for the latest mail matching the "containing" query.
  * @param {String} query search query
- * @returns {Promise} resolves with latest mail object for "containing" query
+ * @returns {Promise<Message>} resolves latest mail object "containing" query
  */
 function latestContaining (query) {
   return this.search(query, 'containing', 0, 1).then(
@@ -367,13 +388,13 @@ function latestContaining (query) {
  * Releases the mail with the given ID using the provided SMTP config.
  * @param {String} id message ID
  * @param {Object} config SMTP configuration
- * @property {String} config.host SMTP host
- * @property {String} config.port SMTP port
- * @property {String} config.email recipient email
- * @property {String} [config.username] SMTP username
- * @property {String} [config.password] SMTP password
- * @property {String} [config.mechanism] SMTP auth mechanism (PLAIN or CRAM-MD5)
- * @returns {Promise} resolves with http.IncomingMessage
+ * @param {String} config.host SMTP host
+ * @param {String} config.port SMTP port
+ * @param {String} config.email recipient email
+ * @param {String} [config.username] SMTP username
+ * @param {String} [config.password] SMTP password
+ * @param {String} [config.mechanism] SMTP auth mechanism (PLAIN or CRAM-MD5)
+ * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
 function releaseMessage (id, config) {
   const options = Object.assign({}, this.options, {
@@ -386,7 +407,7 @@ function releaseMessage (id, config) {
 /**
  * Deletes the mail with the given ID from MailHog.
  * @param {String} id message ID
- * @returns {Promise} resolves with http.IncomingMessage
+ * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
 function deleteMessage (id) {
   const options = Object.assign({}, this.options, {
@@ -398,7 +419,7 @@ function deleteMessage (id) {
 
 /**
  * Deletes all mails stored in MailHog.
- * @returns {Promise} resolves with http.IncomingMessage
+ * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
 function deleteAll () {
   const options = Object.assign({}, this.options, {
@@ -409,13 +430,32 @@ function deleteAll () {
 }
 
 /**
+ * @typedef {Object} Options API options
+ * @property {String} [protocol="http:"] API protocol
+ * @property {String} [host=localhost] API host
+ * @property {number} [port=8025] API port
+ * @property {String} [auth] API basic authentication
+ */
+
+/**
+ * @typedef {Object} API
+ * @property {Options} options
+ * @property {typeof messages} messages
+ * @property {typeof search} search
+ * @property {typeof latestFrom} latestFrom
+ * @property {typeof latestTo} latestTo
+ * @property {typeof latestContaining} latestContaining
+ * @property {typeof releaseMessage} releaseMessage
+ * @property {typeof deleteMessage} deleteMessage
+ * @property {typeof deleteAll} deleteAll
+ * @property {typeof encode} encode
+ * @property {typeof decode} decode
+ */
+
+/**
  * Returns the mailhog API interface.
- * @param {Object} [options] API options
- * @property {String} [options.protocol=http:] API protocol
- * @property {String} [options.host=localhost] API host
- * @property {String} [options.port=8025] API port
- * @property {String} [options.auth] API basic authentication
- * @returns {Object} API object
+ * @param {Options} [options] API options
+ * @returns {API} API object
  */
 function mailhog (options) {
   return {

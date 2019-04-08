@@ -1,6 +1,7 @@
+// @ts-check
 'use strict'
-/* eslint-disable no-useless-escape */
 
+/* eslint-disable no-useless-escape */
 
 // expose to the world
 module.exports = {

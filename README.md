@@ -486,19 +486,19 @@ async function example () {
 
 ### encode
 ```
-mailhog.encode(str, encoding, charset, lineBreak) → String 
+mailhog.encode(str, encoding, charset, lineLength) → String 
 ```
 
 #### Description
 Encodes a String in the given charset to base64 or quoted-printable encoding.
 
 #### Parameters
-Name      | Type   | Required | Default | Description
---------- | ------ | -------- | ------- | ---------------------------
-str       | String | yes      |         | String to encode
-encoding  | String | yes      |         | base64/quoted-printable
-charset   | String | no       | utf8    | Charset of the input string
-lineBreak | Number | no       | 76      | Soft line break limit
+Name       | Type   | Required | Default | Description
+---------- | ------ | -------- | ------- | ---------------------------
+str        | String | yes      |         | String to encode
+encoding   | String | yes      | utf8    | base64/quoted-printable
+charset    | String | no       | utf8    | Charset of the input string
+lineLength | Number | no       | 76      | Soft line break limit
 
 #### Returns
 Returns a `String` in the target encoding.
