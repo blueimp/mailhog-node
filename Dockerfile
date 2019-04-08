@@ -5,7 +5,7 @@ RUN apk --no-cache add \
     npm \
   && npm install -g \
     npm@latest \
-    mocha@5.2.0 \
+    mocha@6.1.1 \
   # Clean up obsolete files:
   && rm -rf \
     /tmp/* \
