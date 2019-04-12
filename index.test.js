@@ -155,25 +155,54 @@ describe('decode', function () {
 
 describe('multipart', function () {
   it('parses quoted-printable encoded text content', async function () {
-    const result = await mailhog.messages(3, 1)
-    assert.strictEqual(
-      result.items[0].text,
-      'ü\r\näö',
-      'Returns plain text content'
-    )
-  })
-
-  it('parses base64 encoded text content', async function () {
-    const result = await mailhog.latestTo('nihon@example.org')
-    assert.strictEqual(result.text, '日本\n', 'Returns plain text content')
+    const result = await mailhog.latestTo('ueaeoe@example.org')
+    assert.strictEqual(result.text, 'ü\r\näö', 'Returns plain text content')
   })
 
   it('parses quoted-printable encoded HTML content', async function () {
-    const result = await mailhog.messages(3, 1)
+    const result = await mailhog.latestTo('ueaeoe@example.org')
     assert.strictEqual(
-      result.items[0].html,
-      '<html><head></head><body><strong>ü<br>äö</strong></body></html>',
+      result.html,
+      '<strong>ü<br>äö</strong>',
       'Returns HTML content'
+    )
+  })
+
+  it('parses attachments', async function () {
+    const result = await mailhog.latestTo('ueaeoe@example.org')
+    assert.strictEqual(result.attachments.length, 2, 'Returns attachments')
+    assert.strictEqual(result.attachments[0].name, 'black-80x60.gif')
+    assert.strictEqual(result.attachments[0].type, 'image/gif')
+    assert.strictEqual(
+      Buffer.from(
+        result.attachments[0].Body,
+        result.attachments[0].encoding
+      ).toString('base64'),
+      'R0lGODdhUAA8AIABAAAAAP///ywAAAAAUAA8AAACS4SPqcvtD6OctNqLs968+w+G4kiW5o' +
+        'mm6sq27gvH8kzX9o3n+s73/g8MCofEovGITCqXzKbzCY1Kp9Sq9YrNarfcrvcLDovH5P' +
+        'KsAAA7'
+    )
+    assert.strictEqual(result.attachments[1].name, 'white-2x1.jpg')
+    assert.strictEqual(result.attachments[1].type, 'image/jpeg')
+    assert.strictEqual(
+      Buffer.from(
+        result.attachments[1].Body,
+        result.attachments[1].encoding
+      ).toString('base64'),
+      '/9j/4AAQSkZJRgABAQEAYABgAAD/4QAiRXhpZgAASUkqAAgAAAABABIBAwABAAAABgASAA' +
+        'AAAAD/7QAsUGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAA8cAgUACm9iamVjdG5hbWUA/9' +
+        'sAQwABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ' +
+        'EBAQEBAQEBAQEBAQEBAQEB/9sAQwEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ' +
+        'EBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEB/8AAEQgAAQACAwEiAAIRAQ' +
+        'MRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQ' +
+        'QEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJS' +
+        'YnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiY' +
+        'qSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5e' +
+        'bn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EAL' +
+        'URAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFW' +
+        'Jy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdH' +
+        'V2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJyt' +
+        'LT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/aAAwDAQACEQMRAD8A/v4ooooA/9k='
     )
   })
 })
@@ -390,6 +419,15 @@ describe('latestContaining', function () {
       result.to,
       '日本 <nihon@example.org>',
       'Returns the decoded mail To header containing the given query'
+    )
+  })
+
+  it('latest mail with query text in attachment filename', async function () {
+    const result = await mailhog.latestContaining('black-80x60.gif')
+    assert.strictEqual(
+      result.attachments[0].name,
+      'black-80x60.gif',
+      'Finds mail for a given attachment filename'
     )
   })
 })

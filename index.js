@@ -99,8 +99,8 @@ function getContent (mail, typeRegExp) {
   for (let part of parts) {
     const type = (part.Headers['Content-Type'] || '').toString()
     if (typeRegExp.test(type)) {
-      const matches = /\bcharset=([\w_-]+)(?:;|$)/.exec(type)
-      const charset = matches ? matches[1] : undefined
+      const match = /\bcharset=([\w_-]+)(?:;|$)/.exec(type)
+      const charset = match ? match[1] : undefined
       return decode(
         part.Body,
         (part.Headers['Content-Transfer-Encoding'] || '').toString(),
@@ -136,7 +136,7 @@ function headerDecoder (_, charset, encoding, data) {
  * @returns {String} Header content
  */
 function getHeader (mail, key) {
-  const header = mail.Content.Headers[key]
+  const header = (mail.Content || mail).Headers[key]
   if (!header || !header.length) return
   // Encoded header parts have the following form:
   // =?charset?encoding?data?=
@@ -238,6 +238,60 @@ function getDeliveryDate () {
 }
 
 /**
+ * Memoized getter for mail Content-Type header.
+ * @returns {String} Decoded mail Content-Type header
+ */
+function getContentType () {
+  delete this.type
+  return (this.type = getHeader(this, 'Content-Type'))
+}
+
+/**
+ * Memoized getter for mail Content-Transfer-Encoding header.
+ * @returns {String} Decoded mail Content-Transfer-Encoding header
+ */
+function getContentTransferEncoding () {
+  delete this.encoding
+  return (this.encoding = getHeader(this, 'Content-Transfer-Encoding'))
+}
+
+/**
+ * @typedef {Object} Attachment
+ * @property {String} name Filename
+ * @property {String} type Content-Type
+ * @property {String} encoding Content-Transfer-Encoding
+ * @property {String} Body Encoded content
+ */
+
+/**
+ * Memoized getter for mail attachments.
+ * @returns {Array<Attachment>} List of mail attachments
+ */
+function getAttachments () {
+  delete this.attachments
+  const attachments = []
+  if (this.MIME && this.MIME.Parts) {
+    for (let part of this.MIME.Parts) {
+      const match = /^attachment;\s*filename="?([^"]+)"?$/.exec(
+        part.Headers['Content-Disposition']
+      )
+      if (!match) continue
+      part.name = match[1]
+      Object.defineProperty(part, 'type', {
+        get: getContentType,
+        configurable: true
+      })
+      Object.defineProperty(part, 'encoding', {
+        get: getContentTransferEncoding,
+        configurable: true
+      })
+      attachments.push(part)
+    }
+  }
+  return (this.attachments = attachments)
+}
+
+/**
  * Injects convenience properties for each mail item in the given result.
  * @param {Object} result Result object for a MailHog API search/messages query
  * @returns {Object} Result object with injected properties for each mail item
@@ -263,6 +317,10 @@ function injectProperties (result) {
     Object.defineProperty(item, 'date', { get: getDate, configurable: true })
     Object.defineProperty(item, 'deliveryDate', {
       get: getDeliveryDate,
+      configurable: true
+    })
+    Object.defineProperty(item, 'attachments', {
+      get: getAttachments,
       configurable: true
     })
   }
@@ -299,24 +357,25 @@ function request (options, data) {
 
 /**
  * @typedef {Object} Message
- * @property {string} ID Message ID
- * @property {string} text Decoded mail text content
- * @property {string} html Decoded mail HTML content
- * @property {string} subject Decoded mail Subject header
- * @property {string} from Decoded mail From header
- * @property {string} to Decoded mail To header
- * @property {string} cc Decoded mail Cc header
- * @property {string} bcc Decoded mail Bcc header
- * @property {string} replyTo Decoded mail Reply-To header
+ * @property {String} ID Message ID
+ * @property {String} text Decoded mail text content
+ * @property {String} html Decoded mail HTML content
+ * @property {String} subject Decoded mail Subject header
+ * @property {String} from Decoded mail From header
+ * @property {String} to Decoded mail To header
+ * @property {String} cc Decoded mail Cc header
+ * @property {String} bcc Decoded mail Bcc header
+ * @property {String} replyTo Decoded mail Reply-To header
  * @property {Date} date Mail Date header
  * @property {Date} deliveryDate Mail Delivery-Date header
+ * @property {Array<Attachment>} attachments List of mail attachments
  */
 
 /**
  * @typedef {Object} Messages
- * @property {number} total Number of results available
- * @property {number} count Number of results returned
- * @property {number} start Offset for the range of results returned
+ * @property {Number} total Number of results available
+ * @property {Number} count Number of results returned
+ * @property {Number} start Offset for the range of results returned
  * @property {Array<Message>} items List of mail object items
  */
 
@@ -433,7 +492,7 @@ function deleteAll () {
  * @typedef {Object} Options API options
  * @property {String} [protocol="http:"] API protocol
  * @property {String} [host=localhost] API host
- * @property {number} [port=8025] API port
+ * @property {Number} [port=8025] API port
  * @property {String} [auth] API basic authentication
  */
 

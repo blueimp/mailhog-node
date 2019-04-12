@@ -163,7 +163,19 @@ The individual mail object items have the following properties:
   bcc: String,        // Decoded mail Bcc header
   replyTo: String,    // Decoded mail Reply-To header
   date: Date,         // Mail Date header
-  deliveryDate: Date  // Mail Delivery-Date header
+  deliveryDate: Date, // Mail Delivery-Date header
+  attachments: Array  // List of mail attachments
+}
+```
+
+The individual attachments have the following properties:
+
+```js
+{
+  name: String,     // Filename
+  type: String,     // Content-Type
+  encoding: String, // Content-Transfer-Encoding
+  Body: String      // Encoded content
 }
 ```
 
@@ -228,7 +240,19 @@ The individual mail object items have the following properties:
   bcc: String,        // Decoded mail Bcc header
   replyTo: String,    // Decoded mail Reply-To header
   date: Date,         // Mail Date header
-  deliveryDate: Date  // Mail Delivery-Date header
+  deliveryDate: Date, // Mail Delivery-Date header
+  attachments: Array  // List of mail attachments
+}
+```
+
+The individual attachments have the following properties:
+
+```js
+{
+  name: String,     // Filename
+  type: String,     // Content-Type
+  encoding: String, // Content-Transfer-Encoding
+  Body: String      // Encoded content
 }
 ```
 
@@ -278,7 +302,19 @@ The resolved mail object has the following properties:
   bcc: String,        // Decoded mail Bcc header
   replyTo: String,    // Decoded mail Reply-To header
   date: Date,         // Mail Date header
-  deliveryDate: Date  // Mail Delivery-Date header
+  deliveryDate: Date, // Mail Delivery-Date header
+  attachments: Array  // List of mail attachments
+}
+```
+
+The individual attachments have the following properties:
+
+```js
+{
+  name: String,     // Filename
+  type: String,     // Content-Type
+  encoding: String, // Content-Transfer-Encoding
+  Body: String      // Encoded content
 }
 ```
 
@@ -326,7 +362,19 @@ The resolved mail object has the following properties:
   bcc: String,        // Decoded mail Bcc header
   replyTo: String,    // Decoded mail Reply-To header
   date: Date,         // Mail Date header
-  deliveryDate: Date  // Mail Delivery-Date header
+  deliveryDate: Date, // Mail Delivery-Date header
+  attachments: Array  // List of mail attachments
+}
+```
+
+The individual attachments have the following properties:
+
+```js
+{
+  name: String,     // Filename
+  type: String,     // Content-Type
+  encoding: String, // Content-Transfer-Encoding
+  Body: String      // Encoded content
 }
 ```
 
@@ -374,7 +422,19 @@ The resolved mail object has the following properties:
   bcc: String,        // Decoded mail Bcc header
   replyTo: String,    // Decoded mail Reply-To header
   date: Date,         // Mail Date header
-  deliveryDate: Date  // Mail Delivery-Date header
+  deliveryDate: Date, // Mail Delivery-Date header
+  attachments: Array  // List of mail attachments
+}
+```
+
+The individual attachments have the following properties:
+
+```js
+{
+  name: String,     // Filename
+  type: String,     // Content-Type
+  encoding: String, // Content-Transfer-Encoding
+  Body: String      // Encoded content
 }
 ```
 
