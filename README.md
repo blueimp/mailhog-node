@@ -59,6 +59,7 @@
     + [Parameters](#parameters-10)
     + [Returns](#returns-10)
     + [Example](#example-10)
+- [Testing](#testing)
 - [License](#license)
 - [Author](#author)
 
@@ -597,6 +598,17 @@ Returns a `String` in the target charset.
 const output = mailhog.decode('5pel5pys', 'base64')
 // 日本
 ```
+
+## Testing
+1. Start [Docker](https://docs.docker.com/).
+3. Install development dependencies:
+   ```sh
+   npm install
+   ```
+4. Run the tests:
+   ```sh
+   npm test
+   ```
 
 ## License
 Released under the [MIT license](https://opensource.org/licenses/MIT).
