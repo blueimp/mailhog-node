@@ -96,7 +96,7 @@ function decode (str, encoding, charset) {
 function getContent (mail, typeRegExp) {
   let parts = [mail.Content]
   if (mail.MIME) parts = parts.concat(mail.MIME.Parts)
-  for (let part of parts) {
+  for (const part of parts) {
     const type = (part.Headers['Content-Type'] || '').toString()
     if (typeRegExp.test(type)) {
       const match = /\bcharset=([\w_-]+)(?:;|$)/.exec(type)
@@ -271,7 +271,7 @@ function getAttachments () {
   delete this.attachments
   const attachments = []
   if (this.MIME && this.MIME.Parts) {
-    for (let part of this.MIME.Parts) {
+    for (const part of this.MIME.Parts) {
       const match = /^attachment;\s*filename="?([^"]+)"?$/.exec(
         part.Headers['Content-Disposition']
       )
@@ -298,7 +298,7 @@ function getAttachments () {
  */
 function injectProperties (result) {
   if (!result.count) return result
-  for (let item of result.items) {
+  for (const item of result.items) {
     // Define memoized getter for contents and headers:
     Object.defineProperty(item, 'text', { get: getText, configurable: true })
     Object.defineProperty(item, 'html', { get: getHTML, configurable: true })
