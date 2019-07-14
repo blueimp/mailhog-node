@@ -1,4 +1,3 @@
-// @ts-check
 'use strict'
 
 /* eslint-disable no-useless-escape */

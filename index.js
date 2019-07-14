@@ -9,7 +9,6 @@
  * https://opensource.org/licenses/MIT
  */
 
-// @ts-check
 'use strict'
 
 const http = require('http')
