@@ -13,11 +13,21 @@ const mailhog = require('.')({
   host: env.MAILHOG_HOST
 })
 
+/**
+ * Sends all mail configured in the mail directory.
+ *
+ * @returns {Promise} Resolves when executing sucessfully, rejects otherwise
+ */
 async function sendAllMail () {
   const sendmailScript = path.join(__dirname, 'sendmail.sh')
   await exec(`${sendmailScript} -S ${env.MAILHOG_HOST}:1025`)
 }
 
+/**
+ * Deletes all mail from MailHog.
+ *
+ * @returns {Promise} Resolves when executing sucessfully, rejects otherwise
+ */
 async function deleteAllMail () {
   const result = await mailhog.deleteAll()
   assert.strictEqual(result.statusCode, 200, 'Responds with status code 200')
