@@ -3,24 +3,36 @@
 
 /* eslint-disable no-useless-escape */
 
-// expose to the world
-module.exports = {
-  encode: encode,
-  decode: decode,
-  wrap: wrap
+/**
+ * Helper function to check if a number is inside provided ranges
+ *
+ * @param {number} nr Number to check for
+ * @param {Array} ranges An Array of allowed values
+ * @returns {boolean} True if value was found inside allowed ranges, else false
+ */
+function checkRanges(nr, ranges) {
+  for (let i = ranges.length - 1; i >= 0; i--) {
+    if (!ranges[i].length) {
+      continue
+    }
+    if (ranges[i].length === 1 && nr === ranges[i][0]) {
+      return true
+    }
+    if (ranges[i].length === 2 && nr >= ranges[i][0] && nr <= ranges[i][1]) {
+      return true
+    }
+  }
+  return false
 }
 
 /**
  * Encodes a Buffer or String into a Quoted-Printable encoded string
  *
- * @param {Buffer|String} buffer Buffer or String to convert
- * @returns {String} Quoted-Printable encoded string
+ * @param {Buffer|string} buffer Buffer or String to convert
+ * @returns {string} Quoted-Printable encoded string
  */
-function encode (buffer) {
-  if (typeof buffer === 'string') {
-    buffer = Buffer.from(buffer, 'utf8')
-  }
-
+function encode(buffer) {
+  const buf = typeof buffer === 'string' ? Buffer.from(buffer) : buffer
   // usable characters that do not need encoding
   const ranges = [
     // https://tools.ietf.org/html/rfc2045#section-6.7
@@ -34,15 +46,15 @@ function encode (buffer) {
   let result = ''
   let ord
 
-  for (let i = 0, len = buffer.length; i < len; i++) {
-    ord = buffer[i]
+  for (let i = 0, len = buf.length; i < len; i++) {
+    ord = buf[i]
     // if the char is in allowed range, then keep as is,
     // unless it is a ws in the end of a line
     if (
       checkRanges(ord, ranges) &&
       !(
         (ord === 0x20 || ord === 0x09) &&
-        (i === len - 1 || buffer[i + 1] === 0x0a || buffer[i + 1] === 0x0d)
+        (i === len - 1 || buf[i + 1] === 0x0a || buf[i + 1] === 0x0d)
       )
     ) {
       result += String.fromCharCode(ord)
@@ -57,11 +69,11 @@ function encode (buffer) {
 /**
  * Decodes a Quoted-Printable encoded string to a Buffer object
  *
- * @param {String} str Quoted-Printable encoded string
+ * @param {string} input Quoted-Printable encoded string
  * @returns {Buffer} Decoded value
  */
-function decode (str) {
-  str = (str || '')
+function decode(input) {
+  const str = (input || '')
     .toString()
     // remove invalid whitespace from the end of lines
     .replace(/[\t ]+$/gm, '')
@@ -95,20 +107,20 @@ function decode (str) {
 /**
  * Adds soft line breaks to a Quoted-Printable string
  *
- * @param {String} str Quoted-Printable encoded string, might need line wrapping
- * @param {Number} [lineLength=76] Maximum allowed length for a line
- * @returns {String} Soft-wrapped Quoted-Printable encoded string
+ * @param {string} str Quoted-Printable encoded string
+ * @param {number} [lineLength=76] Maximum allowed length for a line
+ * @returns {string} Soft-wrapped Quoted-Printable encoded string
  */
-function wrap (str, lineLength) {
-  str = (str || '').toString()
-  lineLength = lineLength || 76
+function wrap(str, lineLength) {
+  const input = (str || '').toString()
+  const maxLength = lineLength || 76
 
-  if (str.length <= lineLength) {
-    return str
+  if (input.length <= maxLength) {
+    return input
   }
 
-  const lineMargin = Math.floor(lineLength / 3)
-  const len = str.length
+  const lineMargin = Math.floor(maxLength / 3)
+  const len = input.length
   let pos = 0
   let match
   let code
@@ -117,7 +129,7 @@ function wrap (str, lineLength) {
 
   // insert soft linebreaks where needed
   while (pos < len) {
-    line = str.substr(pos, lineLength)
+    line = input.substr(pos, maxLength)
     if ((match = line.match(/\r\n/))) {
       line = line.substr(0, match.index + match[0].length)
       result += line
@@ -137,7 +149,7 @@ function wrap (str, lineLength) {
       pos += line.length
       continue
     } else if (
-      line.length > lineLength - lineMargin &&
+      line.length > maxLength - lineMargin &&
       (match = line.substr(-lineMargin).match(/[ \t\.,!\?][^ \t\.,!\?]*$/))
     ) {
       // truncate to nearest space
@@ -171,9 +183,9 @@ function wrap (str, lineLength) {
     }
 
     if (pos + line.length < len && line.substr(-1) !== '\n') {
-      if (line.length === lineLength && line.match(/\=[\da-f]{2}$/i)) {
+      if (line.length === maxLength && line.match(/\=[\da-f]{2}$/i)) {
         line = line.substr(0, line.length - 3)
-      } else if (line.length === lineLength) {
+      } else if (line.length === maxLength) {
         line = line.substr(0, line.length - 1)
       }
       pos += line.length
@@ -188,24 +200,8 @@ function wrap (str, lineLength) {
   return result
 }
 
-/**
- * Helper function to check if a number is inside provided ranges
- *
- * @param {Number} nr Number to check for
- * @param {Array} ranges An Array of allowed values
- * @returns {Boolean} True if value was found inside allowed ranges, else false
- */
-function checkRanges (nr, ranges) {
-  for (let i = ranges.length - 1; i >= 0; i--) {
-    if (!ranges[i].length) {
-      continue
-    }
-    if (ranges[i].length === 1 && nr === ranges[i][0]) {
-      return true
-    }
-    if (ranges[i].length === 2 && nr >= ranges[i][0] && nr <= ranges[i][1]) {
-      return true
-    }
-  }
-  return false
+module.exports = {
+  encode: encode,
+  decode: decode,
+  wrap: wrap
 }

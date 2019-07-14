@@ -13,87 +13,93 @@
 'use strict'
 
 const http = require('http')
+// no-unpublished-require does not handle negated patterns in .npmignore
+// eslint-disable-next-line node/no-unpublished-require
 const libqp = require('./libqp')
 
 /**
  * Adds soft line breaks to a given String
- * @param {String} str String to wrap
- * @param {Number} [lineLength=76] Maximum allowed length for a line
- * @returns {String} Soft-wrapped String using `\r\n` as line breaks
+ *
+ * @param {string} str String to wrap
+ * @param {number} [lineLength=76] Maximum allowed length for a line
+ * @returns {string} Soft-wrapped String using `\r\n` as line breaks
  */
-function wrap (str, lineLength) {
-  lineLength = lineLength || 76
-  const lines = Math.ceil(str.length / lineLength)
+function wrap(str, lineLength) {
+  const maxLength = lineLength || 76
+  const lines = Math.ceil(str.length / maxLength)
   let output = ''
-  for (let i = 0, offset = 0; i < lines; ++i, offset += lineLength) {
-    output += str.substr(offset, lineLength) + '\r\n'
+  for (let i = 0, offset = 0; i < lines; ++i, offset += maxLength) {
+    output += str.substr(offset, maxLength) + '\r\n'
   }
   return output.trim()
 }
 
 /**
  * Encodes a String in the given charset to base64 or quoted-printable encoding.
- * @param {String} str String to encode
- * @param {String} encoding base64|quoted-printable
- * @param {String} [charset=utf8] Charset of the input string
- * @param {Number} [lineLength=76] Soft line break limit
- * @returns {String} Encoded String
+ *
+ * @param {string} str String to encode
+ * @param {string} encoding base64|quoted-printable
+ * @param {string} [charset=utf8] Charset of the input string
+ * @param {number} [lineLength=76] Soft line break limit
+ * @returns {string} Encoded String
  */
-function encode (str, encoding, charset, lineLength) {
-  if (lineLength === undefined) lineLength = 76
-  let buffer
-  if (!charset || /^utf-?8$/i.test(charset)) {
-    buffer = Buffer.from(str, 'utf8')
-  } else {
-    buffer = require('iconv-lite').encode(str, charset)
+function encode(str, encoding, charset, lineLength) {
+  const maxLength = lineLength === undefined ? 76 : lineLength
+  const outputEncoding = encoding && encoding.toLowerCase()
+  let output = str
+  if (outputEncoding === 'quoted-printable' || outputEncoding === 'base64') {
+    const isUTF8Input = !charset || /^utf-?8$/.test(charset.toLowerCase())
+    let buffer
+    if (isUTF8Input) {
+      buffer = Buffer.from(str)
+    } else {
+      buffer = require('iconv-lite').encode(str, charset)
+    }
+    if (outputEncoding === 'quoted-printable') {
+      const output = libqp.encode(buffer)
+      return maxLength ? libqp.wrap(output, maxLength) : output
+    }
+    output = buffer.toString('base64')
   }
-  let output
-  switch ((encoding || '').toLowerCase()) {
-    case 'quoted-printable':
-      output = libqp.encode(buffer)
-      return lineLength ? libqp.wrap(output, lineLength) : output
-    case 'base64':
-      output = buffer.toString('base64')
-      break
-    default:
-      output = str
-  }
-  return lineLength ? wrap(output, lineLength) : output
+  return maxLength ? wrap(output, maxLength) : output
 }
 
 /**
  * Decodes a String from the given encoding and outputs it in the given charset.
- * @param {String} str String to decode
- * @param {String} [encoding=utf8] input encoding, e.g. base64|quoted-printable
- * @param {String} [charset=utf8] Charset to use for the output
- * @returns {String} Decoded String
+ *
+ * @param {string} str String to decode
+ * @param {string} [encoding=utf8] input encoding, e.g. base64|quoted-printable
+ * @param {string} [charset=utf8] Charset to use for the output
+ * @returns {string} Decoded String
  */
-function decode (str, encoding, charset) {
+function decode(str, encoding, charset) {
+  const inputEncoding = encoding && encoding.toLowerCase()
+  const utf8Regexp = /^utf-?8$/
+  const isUTF8Input = !inputEncoding || utf8Regexp.test(inputEncoding)
+  const isUTF8Output = !charset || utf8Regexp.test(charset.toLowerCase())
+  if (isUTF8Input && isUTF8Output) return str
+  // 7bit|8bit|binary are not encoded, x-token has an unknown encoding, see:
+  // https://www.w3.org/Protocols/rfc1341/5_Content-Transfer-Encoding.html
+  if (/^(7|8)bit|binary|x-.+$/.test(inputEncoding)) return str
   let buffer
-  if (encoding) {
-    encoding = encoding.toLowerCase()
-    // 7bit|8bit|binary are not encoded, x-token has an unknown encoding, see:
-    // https://www.w3.org/Protocols/rfc1341/5_Content-Transfer-Encoding.html
-    if (/^(7|8)bit|binary|x-.+$/.test(encoding)) return str
-  }
-  if (encoding === 'quoted-printable') {
+  if (inputEncoding === 'quoted-printable') {
     buffer = libqp.decode(str)
   } else {
-    buffer = Buffer.from(str, encoding)
+    // @ts-ignore (string to BufferEncoding type cast)
+    buffer = Buffer.from(str, inputEncoding)
   }
-  if (!charset || /^utf-?8$/i.test(charset)) {
-    return buffer.toString()
-  }
+  if (isUTF8Output) return buffer.toString()
   return require('iconv-lite').decode(buffer, charset)
 }
 
 /**
  * Returns the content part matching the given content-type regular expression.
- * @param {Object} mail MailHog mail object
+ *
+ * @param {object} mail MailHog mail object
  * @param {RegExp} typeRegExp Regular expression matching the content-type
- * @returns {String} Decoded content with a type matching the content-type
+ * @returns {string} Decoded content with a type matching the content-type
  */
-function getContent (mail, typeRegExp) {
+function getContent(mail, typeRegExp) {
   let parts = [mail.Content]
   if (mail.MIME) parts = parts.concat(mail.MIME.Parts)
   for (const part of parts) {
@@ -112,13 +118,14 @@ function getContent (mail, typeRegExp) {
 
 /**
  * Matches encoded Strings in mail headers and returns decoded content.
- * @param {String} _ Matched substring (unused)
- * @param {String} charset Charset to use for the output
- * @param {String} encoding B|Q, which stands for base64 or quoted-printable
- * @param {String} data Encoded String data
- * @returns {String} Decoded header content
+ *
+ * @param {string} _ Matched substring (unused)
+ * @param {string} charset Charset to use for the output
+ * @param {string} encoding B|Q, which stands for base64 or quoted-printable
+ * @param {string} data Encoded String data
+ * @returns {string} Decoded header content
  */
-function headerDecoder (_, charset, encoding, data) {
+function headerDecoder(_, charset, encoding, data) {
   switch (encoding) {
     case 'b':
     case 'B':
@@ -131,11 +138,12 @@ function headerDecoder (_, charset, encoding, data) {
 
 /**
  * Returns header content for the given mail object and header key.
- * @param {Object} mail MailHog mail object
- * @param {String} key Header key
- * @returns {String} Header content
+ *
+ * @param {object} mail MailHog mail object
+ * @param {string} key Header key
+ * @returns {string} Header content
  */
-function getHeader (mail, key) {
+function getHeader(mail, key) {
   const header = (mail.Content || mail).Headers[key]
   if (!header || !header.length) return
   // Encoded header parts have the following form:
@@ -145,81 +153,90 @@ function getHeader (mail, key) {
 
 /**
  * Memoized getter for mail text content.
- * @returns {String} Decoded mail text content
+ *
+ * @returns {string} Decoded mail text content
  */
-function getText () {
+function getText() {
   delete this.text
   return (this.text = getContent(this, /^text\/plain($|;)/i))
 }
 
 /**
  * Memoized getter for mail HTML content.
- * @returns {String} Decoded mail HTML content
+ *
+ * @returns {string} Decoded mail HTML content
  */
-function getHTML () {
+function getHTML() {
   delete this.html
   return (this.html = getContent(this, /^text\/html($|;)/i))
 }
 
 /**
  * Memoized getter for mail Subject header.
- * @returns {String} Decoded mail Subject header
+ *
+ * @returns {string} Decoded mail Subject header
  */
-function getSubject () {
+function getSubject() {
   delete this.subject
   return (this.subject = getHeader(this, 'Subject'))
 }
 
 /**
  * Memoized getter for mail From header.
- * @returns {String} Decoded mail From header
+ *
+ * @returns {string} Decoded mail From header
  */
-function getFrom () {
+function getFrom() {
   delete this.from
   return (this.from = getHeader(this, 'From'))
 }
 
 /**
  * Memoized getter for mail To header.
- * @returns {String} Decoded mail To header
+ *
+ * @returns {string} Decoded mail To header
  */
-function getTo () {
+function getTo() {
   delete this.to
   return (this.to = getHeader(this, 'To'))
 }
 
 /**
  * Memoized getter for mail Cc header.
- * @returns {String} Decoded mail Cc header
+ *
+ * @returns {string} Decoded mail Cc header
  */
-function getCc () {
+function getCc() {
   delete this.cc
   return (this.cc = getHeader(this, 'Cc'))
 }
 
 /**
  * Memoized getter for mail Bcc header.
- * @returns {String} Decoded mail Bcc header
+ *
+ * @returns {string} Decoded mail Bcc header
  */
-function getBcc () {
+function getBcc() {
   delete this.bcc
   return (this.bcc = getHeader(this, 'Bcc'))
 }
 
 /**
  * Memoized getter for mail Reply-To header.
- * @returns {String} Decoded mail Reply-To header
+ *
+ * @returns {string} Decoded mail Reply-To header
  */
-function getReplyTo () {
+function getReplyTo() {
   delete this.replyTo
   return (this.replyTo = getHeader(this, 'Reply-To'))
 }
 
 /**
  * Memoized getter for mail Date header.
+ *
  * @returns {Date} Mail Date header
  */
-function getDate () {
+function getDate() {
   delete this.date
   const dateString = getHeader(this, 'Date')
   if (dateString) this.date = new Date(Date.parse(dateString))
@@ -228,9 +245,10 @@ function getDate () {
 
 /**
  * Memoized getter for mail Delivery-Date header.
+ *
  * @returns {Date} Mail Delivery-Date header
  */
-function getDeliveryDate () {
+function getDeliveryDate() {
   delete this.deliveryDate
   // MailHog does not set the Delivery-Date header, but it sets a Created
   // property that serves the same purpose (delivery date to application):
@@ -239,35 +257,38 @@ function getDeliveryDate () {
 
 /**
  * Memoized getter for mail Content-Type header.
- * @returns {String} Decoded mail Content-Type header
+ *
+ * @returns {string} Decoded mail Content-Type header
  */
-function getContentType () {
+function getContentType() {
   delete this.type
   return (this.type = getHeader(this, 'Content-Type'))
 }
 
 /**
  * Memoized getter for mail Content-Transfer-Encoding header.
- * @returns {String} Decoded mail Content-Transfer-Encoding header
+ *
+ * @returns {string} Decoded mail Content-Transfer-Encoding header
  */
-function getContentTransferEncoding () {
+function getContentTransferEncoding() {
   delete this.encoding
   return (this.encoding = getHeader(this, 'Content-Transfer-Encoding'))
 }
 
 /**
- * @typedef {Object} Attachment
- * @property {String} name Filename
- * @property {String} type Content-Type
- * @property {String} encoding Content-Transfer-Encoding
- * @property {String} Body Encoded content
+ * @typedef {object} Attachment
+ * @property {string} name Filename
+ * @property {string} type Content-Type
+ * @property {string} encoding Content-Transfer-Encoding
+ * @property {string} Body Encoded content
  */
 
 /**
  * Memoized getter for mail attachments.
+ *
  * @returns {Array<Attachment>} List of mail attachments
  */
-function getAttachments () {
+function getAttachments() {
   delete this.attachments
   const attachments = []
   if (this.MIME && this.MIME.Parts) {
@@ -293,10 +314,11 @@ function getAttachments () {
 
 /**
  * Injects convenience properties for each mail item in the given result.
- * @param {Object} result Result object for a MailHog API search/messages query
- * @returns {Object} Result object with injected properties for each mail item
+ *
+ * @param {object} result Result object for a MailHog API search/messages query
+ * @returns {object} Result object with injected properties for each mail item
  */
-function injectProperties (result) {
+function injectProperties(result) {
   if (!result.count) return result
   for (const item of result.items) {
     // Define memoized getter for contents and headers:
@@ -329,11 +351,12 @@ function injectProperties (result) {
 
 /**
  * Sends a http.request and resolves with the parsed JSON response.
- * @param {String} options http.request options
- * @param {String} [data] POST data
+ *
+ * @param {string} options http.request options
+ * @param {string} [data] POST data
  * @returns {Promise} resolves with JSON or http.IncomingMessage if no body
  */
-function request (options, data) {
+function request(options, data) {
   return new Promise((resolve, reject) => {
     const req = http
       .request(options, response => {
@@ -356,36 +379,37 @@ function request (options, data) {
 }
 
 /**
- * @typedef {Object} Message
- * @property {String} ID Message ID
- * @property {String} text Decoded mail text content
- * @property {String} html Decoded mail HTML content
- * @property {String} subject Decoded mail Subject header
- * @property {String} from Decoded mail From header
- * @property {String} to Decoded mail To header
- * @property {String} cc Decoded mail Cc header
- * @property {String} bcc Decoded mail Bcc header
- * @property {String} replyTo Decoded mail Reply-To header
+ * @typedef {object} Message
+ * @property {string} ID Message ID
+ * @property {string} text Decoded mail text content
+ * @property {string} html Decoded mail HTML content
+ * @property {string} subject Decoded mail Subject header
+ * @property {string} from Decoded mail From header
+ * @property {string} to Decoded mail To header
+ * @property {string} cc Decoded mail Cc header
+ * @property {string} bcc Decoded mail Bcc header
+ * @property {string} replyTo Decoded mail Reply-To header
  * @property {Date} date Mail Date header
  * @property {Date} deliveryDate Mail Delivery-Date header
  * @property {Array<Attachment>} attachments List of mail attachments
  */
 
 /**
- * @typedef {Object} Messages
- * @property {Number} total Number of results available
- * @property {Number} count Number of results returned
- * @property {Number} start Offset for the range of results returned
+ * @typedef {object} Messages
+ * @property {number} total Number of results available
+ * @property {number} count Number of results returned
+ * @property {number} start Offset for the range of results returned
  * @property {Array<Message>} items List of mail object items
  */
 
 /**
  * Requests mail objects from the MailHog API.
- * @param {Number} [start=0] defines the offset for the messages query
- * @param {Number} [limit=50] defines the max number of results
+ *
+ * @param {number} [start=0] defines the offset for the messages query
+ * @param {number} [limit=50] defines the max number of results
  * @returns {Promise<Messages>} resolves with object listing the mail items
  */
-function messages (start, limit) {
+function messages(start, limit) {
   let path = '/api/v2/messages'
   if (start) path += `?start=${start}`
   if (limit) path += `${start ? '&' : '?'}limit=${limit}`
@@ -395,15 +419,16 @@ function messages (start, limit) {
 
 /**
  * Sends a search request to the MailHog API.
- * @param {String} query search query
- * @param {String} [kind=containing] query kind, can be from|to|containing
- * @param {Number} [start=0] defines the offset for the search query
- * @param {Number} [limit=50] defines the max number of results
+ *
+ * @param {string} query search query
+ * @param {string} [kind=containing] query kind, can be from|to|containing
+ * @param {number} [start=0] defines the offset for the search query
+ * @param {number} [limit=50] defines the max number of results
  * @returns {Promise<Messages>} resolves with object listing the mail items
  */
-function search (query, kind, start, limit) {
-  query = encodeURIComponent(query)
-  let path = `/api/v2/search?kind=${kind || 'containing'}&query=${query}`
+function search(query, kind, start, limit) {
+  const encodedQuery = encodeURIComponent(query)
+  let path = `/api/v2/search?kind=${kind || 'containing'}&query=${encodedQuery}`
   if (start) path += `&start=${start}`
   if (limit) path += `&limit=${limit}`
   const options = Object.assign({}, this.options, { path })
@@ -412,10 +437,11 @@ function search (query, kind, start, limit) {
 
 /**
  * Sends a search request for the latest mail matching the "from" query.
- * @param {String} query from address
+ *
+ * @param {string} query from address
  * @returns {Promise<Message>} resolves latest mail object for the "from" query
  */
-function latestFrom (query) {
+function latestFrom(query) {
   return this.search(query, 'from', 0, 1).then(
     result => result.count && result.items[0]
   )
@@ -423,10 +449,11 @@ function latestFrom (query) {
 
 /**
  * Sends a search request for the latest mail matching the "to" query.
- * @param {String} query to address
+ *
+ * @param {string} query to address
  * @returns {Promise<Message>} resolves latest mail object for the "to" query
  */
-function latestTo (query) {
+function latestTo(query) {
   return this.search(query, 'to', 0, 1).then(
     result => result.count && result.items[0]
   )
@@ -434,10 +461,11 @@ function latestTo (query) {
 
 /**
  * Sends a search request for the latest mail matching the "containing" query.
- * @param {String} query search query
+ *
+ * @param {string} query search query
  * @returns {Promise<Message>} resolves latest mail object "containing" query
  */
-function latestContaining (query) {
+function latestContaining(query) {
   return this.search(query, 'containing', 0, 1).then(
     result => result.count && result.items[0]
   )
@@ -445,17 +473,18 @@ function latestContaining (query) {
 
 /**
  * Releases the mail with the given ID using the provided SMTP config.
- * @param {String} id message ID
- * @param {Object} config SMTP configuration
- * @param {String} config.host SMTP host
- * @param {String} config.port SMTP port
- * @param {String} config.email recipient email
- * @param {String} [config.username] SMTP username
- * @param {String} [config.password] SMTP password
- * @param {String} [config.mechanism] SMTP auth mechanism (PLAIN or CRAM-MD5)
+ *
+ * @param {string} id message ID
+ * @param {object} config SMTP configuration
+ * @param {string} config.host SMTP host
+ * @param {string} config.port SMTP port
+ * @param {string} config.email recipient email
+ * @param {string} [config.username] SMTP username
+ * @param {string} [config.password] SMTP password
+ * @param {string} [config.mechanism] SMTP auth mechanism (PLAIN or CRAM-MD5)
  * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
-function releaseMessage (id, config) {
+function releaseMessage(id, config) {
   const options = Object.assign({}, this.options, {
     method: 'POST',
     path: '/api/v1/messages/' + encodeURIComponent(id) + '/release'
@@ -465,10 +494,11 @@ function releaseMessage (id, config) {
 
 /**
  * Deletes the mail with the given ID from MailHog.
- * @param {String} id message ID
+ *
+ * @param {string} id message ID
  * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
-function deleteMessage (id) {
+function deleteMessage(id) {
   const options = Object.assign({}, this.options, {
     method: 'DELETE',
     path: '/api/v1/messages/' + encodeURIComponent(id)
@@ -478,9 +508,10 @@ function deleteMessage (id) {
 
 /**
  * Deletes all mails stored in MailHog.
+ *
  * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
-function deleteAll () {
+function deleteAll() {
   const options = Object.assign({}, this.options, {
     method: 'DELETE',
     path: '/api/v1/messages'
@@ -489,15 +520,15 @@ function deleteAll () {
 }
 
 /**
- * @typedef {Object} Options API options
- * @property {String} [protocol="http:"] API protocol
- * @property {String} [host=localhost] API host
- * @property {Number} [port=8025] API port
- * @property {String} [auth] API basic authentication
+ * @typedef {object} Options API options
+ * @property {string} [protocol="http:"] API protocol
+ * @property {string} [host=localhost] API host
+ * @property {number} [port=8025] API port
+ * @property {string} [auth] API basic authentication
  */
 
 /**
- * @typedef {Object} API
+ * @typedef {object} API
  * @property {Options} options
  * @property {typeof messages} messages
  * @property {typeof search} search
@@ -513,10 +544,11 @@ function deleteAll () {
 
 /**
  * Returns the mailhog API interface.
+ *
  * @param {Options} [options] API options
  * @returns {API} API object
  */
-function mailhog (options) {
+function mailhog(options) {
   return {
     options: Object.assign({ port: 8025 }, options),
     messages,
