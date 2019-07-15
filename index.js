@@ -12,8 +12,6 @@
 'use strict'
 
 const http = require('http')
-// no-unpublished-require does not handle negated patterns in .npmignore
-// eslint-disable-next-line node/no-unpublished-require
 const libqp = require('./libqp')
 
 /**
