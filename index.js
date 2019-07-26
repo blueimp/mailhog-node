@@ -407,7 +407,7 @@ function request(options, data) {
  * @returns {Promise<Messages>} resolves with object listing the mail items
  */
 function messages(start, limit) {
-  let path = '/api/v2/messages'
+  let path = `${this.options.basePath}/v2/messages`
   if (start) path += `?start=${start}`
   if (limit) path += `${start ? '&' : '?'}limit=${limit}`
   const options = Object.assign({}, this.options, { path })
@@ -424,8 +424,10 @@ function messages(start, limit) {
  * @returns {Promise<Messages>} resolves with object listing the mail items
  */
 function search(query, kind, start, limit) {
+  const basePath = this.options.basePath
+  const kindParam = kind || 'containing'
   const encodedQuery = encodeURIComponent(query)
-  let path = `/api/v2/search?kind=${kind || 'containing'}&query=${encodedQuery}`
+  let path = `${basePath}/v2/search?kind=${kindParam}&query=${encodedQuery}`
   if (start) path += `&start=${start}`
   if (limit) path += `&limit=${limit}`
   const options = Object.assign({}, this.options, { path })
@@ -482,9 +484,10 @@ function latestContaining(query) {
  * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
 function releaseMessage(id, config) {
+  const basePath = this.options.basePath
   const options = Object.assign({}, this.options, {
     method: 'POST',
-    path: '/api/v1/messages/' + encodeURIComponent(id) + '/release'
+    path: `${basePath}/v1/messages/${encodeURIComponent(id)}/release`
   })
   return request(options, JSON.stringify(config))
 }
@@ -498,7 +501,7 @@ function releaseMessage(id, config) {
 function deleteMessage(id) {
   const options = Object.assign({}, this.options, {
     method: 'DELETE',
-    path: '/api/v1/messages/' + encodeURIComponent(id)
+    path: `${this.options.basePath}/v1/messages/${encodeURIComponent(id)}`
   })
   return request(options)
 }
@@ -511,7 +514,7 @@ function deleteMessage(id) {
 function deleteAll() {
   const options = Object.assign({}, this.options, {
     method: 'DELETE',
-    path: '/api/v1/messages'
+    path: `${this.options.basePath}/v1/messages`
   })
   return request(options)
 }
@@ -522,6 +525,7 @@ function deleteAll() {
  * @property {string} [host=localhost] API host
  * @property {number} [port=8025] API port
  * @property {string} [auth] API basic authentication
+ * @property {string} [basePath="/api"] API base path
  */
 
 /**
@@ -547,7 +551,7 @@ function deleteAll() {
  */
 function mailhog(options) {
   return {
-    options: Object.assign({ port: 8025 }, options),
+    options: Object.assign({ port: 8025, basePath: '/api' }, options),
     messages,
     search,
     latestFrom,

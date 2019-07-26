@@ -93,6 +93,7 @@ calls to the MailHog API and returns the `mailhog` API object.
 | options.host     | String | no       | localhost | API host                 |
 | options.port     | Number | no       | 8025      | API port                 |
 | options.auth     | String | no       |           | API basic authentication |
+| options.basePath | String | no       | /api      | API base path            |
 
 ### Returns
 
