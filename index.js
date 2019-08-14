@@ -355,7 +355,7 @@ function injectProperties(result) {
  * @returns {Promise} resolves with JSON or http.IncomingMessage if no body
  */
 function request(options, data) {
-  const client = options.protocol == 'https:' ? https : http
+  const client = options.protocol === 'https:' ? https : http
   return new Promise((resolve, reject) => {
     const req = client
       .request(options, response => {
