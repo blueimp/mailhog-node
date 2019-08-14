@@ -350,7 +350,7 @@ function injectProperties(result) {
 /**
  * Sends a http.request and resolves with the parsed JSON response.
  *
- * @param {string} options http.request options
+ * @param {object} options http.request options
  * @param {string} [data] POST data
  * @returns {Promise} resolves with JSON or http.IncomingMessage if no body
  */
