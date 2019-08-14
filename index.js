@@ -36,7 +36,7 @@ function wrap(str, lineLength) {
  * Encodes a String in the given charset to base64 or quoted-printable encoding.
  *
  * @param {string} str String to encode
- * @param {string} encoding base64|quoted-printable
+ * @param {string} [encoding] base64|quoted-printable
  * @param {string} [charset=utf8] Charset of the input string
  * @param {number} [lineLength=76] Soft line break limit
  * @returns {string} Encoded String
