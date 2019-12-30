@@ -11,6 +11,8 @@
 
 'use strict'
 
+/* global BufferEncoding */
+
 const http = require('http')
 const https = require('https')
 const libqp = require('./libqp')
@@ -83,8 +85,11 @@ function decode(str, encoding, charset) {
   if (inputEncoding === 'quoted-printable') {
     buffer = libqp.decode(str)
   } else {
-    // @ts-ignore (string to BufferEncoding type cast)
-    buffer = Buffer.from(str, inputEncoding)
+    buffer = Buffer.from(
+      str,
+      /** @type {BufferEncoding} */
+      (inputEncoding)
+    )
   }
   if (isUTF8Output) return buffer.toString()
   return require('iconv-lite').decode(buffer, charset)

@@ -1,6 +1,6 @@
 'use strict'
 
-/* global before, after, describe, it */
+/* global before, after, describe, it, BufferEncoding */
 
 const path = require('path')
 const util = require('util')
@@ -185,8 +185,8 @@ describe('multipart', function() {
     assert.strictEqual(
       Buffer.from(
         result.attachments[0].Body,
-        // @ts-ignore (string to BufferEncoding type cast)
-        result.attachments[0].encoding
+        /** @type {BufferEncoding} */
+        (result.attachments[0].encoding)
       ).toString('base64'),
       'R0lGODdhUAA8AIABAAAAAP///ywAAAAAUAA8AAACS4SPqcvtD6OctNqLs968+w+G4kiW5o' +
         'mm6sq27gvH8kzX9o3n+s73/g8MCofEovGITCqXzKbzCY1Kp9Sq9YrNarfcrvcLDovH5P' +
@@ -197,8 +197,8 @@ describe('multipart', function() {
     assert.strictEqual(
       Buffer.from(
         result.attachments[1].Body,
-        // @ts-ignore (string to BufferEncoding type cast)
-        result.attachments[1].encoding
+        /** @type {BufferEncoding} */
+        (result.attachments[1].encoding)
       ).toString('base64'),
       '/9j/4AAQSkZJRgABAQEAYABgAAD/4QAiRXhpZgAASUkqAAgAAAABABIBAwABAAAABgASAA' +
         'AAAAD/7QAsUGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAA8cAgUACm9iamVjdG5hbWUA/9' +
