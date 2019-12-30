@@ -557,19 +557,21 @@ function deleteAll() {
  * @returns {API} API object
  */
 function mailhog(options) {
-  return {
+  const api = {
     options: Object.assign({ port: 8025, basePath: '/api' }, options),
-    messages,
-    search,
-    latestFrom,
-    latestTo,
-    latestContaining,
-    releaseMessage,
-    deleteMessage,
-    deleteAll,
     encode,
     decode
   }
+  return Object.assign(api, {
+    messages: messages.bind(api),
+    search: search.bind(api),
+    latestFrom: latestFrom.bind(api),
+    latestTo: latestTo.bind(api),
+    latestContaining: latestContaining.bind(api),
+    releaseMessage: releaseMessage.bind(api),
+    deleteMessage: deleteMessage.bind(api),
+    deleteAll: deleteAll.bind(api)
+  })
 }
 
 module.exports = mailhog
