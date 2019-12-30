@@ -11,6 +11,62 @@
 
 'use strict'
 
+/**
+ * @typedef {object} Attachment
+ * @property {string} name Filename
+ * @property {string} type Content-Type
+ * @property {string} encoding Content-Transfer-Encoding
+ * @property {string} Body Encoded content
+ */
+
+/**
+ * @typedef {object} Message
+ * @property {string} ID Message ID
+ * @property {string} text Decoded mail text content
+ * @property {string} html Decoded mail HTML content
+ * @property {string} subject Decoded mail Subject header
+ * @property {string} from Decoded mail From header
+ * @property {string} to Decoded mail To header
+ * @property {string} cc Decoded mail Cc header
+ * @property {string} bcc Decoded mail Bcc header
+ * @property {string} replyTo Decoded mail Reply-To header
+ * @property {Date} date Mail Date header
+ * @property {Date} deliveryDate Mail Delivery-Date header
+ * @property {Array<Attachment>} attachments List of mail attachments
+ */
+
+/**
+ * @typedef {object} Messages
+ * @property {number} total Number of results available
+ * @property {number} count Number of results returned
+ * @property {number} start Offset for the range of results returned
+ * @property {Array<Message>} items List of mail object items
+ */
+
+/**
+ * @typedef {object} Options API options
+ * @property {string} [protocol="http:"] API protocol
+ * @property {string} [host=localhost] API host
+ * @property {number} [port=8025] API port
+ * @property {string} [auth] API basic authentication
+ * @property {string} [basePath="/api"] API base path
+ */
+
+/**
+ * @typedef {object} API
+ * @property {Options} options
+ * @property {typeof messages} messages
+ * @property {typeof search} search
+ * @property {typeof latestFrom} latestFrom
+ * @property {typeof latestTo} latestTo
+ * @property {typeof latestContaining} latestContaining
+ * @property {typeof releaseMessage} releaseMessage
+ * @property {typeof deleteMessage} deleteMessage
+ * @property {typeof deleteAll} deleteAll
+ * @property {typeof encode} encode
+ * @property {typeof decode} decode
+ */
+
 /* global BufferEncoding */
 
 const http = require('http')
@@ -279,14 +335,6 @@ function getContentTransferEncoding() {
 }
 
 /**
- * @typedef {object} Attachment
- * @property {string} name Filename
- * @property {string} type Content-Type
- * @property {string} encoding Content-Transfer-Encoding
- * @property {string} Body Encoded content
- */
-
-/**
  * Memoized getter for mail attachments.
  *
  * @returns {Array<Attachment>} List of mail attachments
@@ -381,30 +429,6 @@ function request(options, data) {
     req.end()
   })
 }
-
-/**
- * @typedef {object} Message
- * @property {string} ID Message ID
- * @property {string} text Decoded mail text content
- * @property {string} html Decoded mail HTML content
- * @property {string} subject Decoded mail Subject header
- * @property {string} from Decoded mail From header
- * @property {string} to Decoded mail To header
- * @property {string} cc Decoded mail Cc header
- * @property {string} bcc Decoded mail Bcc header
- * @property {string} replyTo Decoded mail Reply-To header
- * @property {Date} date Mail Date header
- * @property {Date} deliveryDate Mail Delivery-Date header
- * @property {Array<Attachment>} attachments List of mail attachments
- */
-
-/**
- * @typedef {object} Messages
- * @property {number} total Number of results available
- * @property {number} count Number of results returned
- * @property {number} start Offset for the range of results returned
- * @property {Array<Message>} items List of mail object items
- */
 
 /**
  * Requests mail objects from the MailHog API.
@@ -525,30 +549,6 @@ function deleteAll() {
   })
   return request(options)
 }
-
-/**
- * @typedef {object} Options API options
- * @property {string} [protocol="http:"] API protocol
- * @property {string} [host=localhost] API host
- * @property {number} [port=8025] API port
- * @property {string} [auth] API basic authentication
- * @property {string} [basePath="/api"] API base path
- */
-
-/**
- * @typedef {object} API
- * @property {Options} options
- * @property {typeof messages} messages
- * @property {typeof search} search
- * @property {typeof latestFrom} latestFrom
- * @property {typeof latestTo} latestTo
- * @property {typeof latestContaining} latestContaining
- * @property {typeof releaseMessage} releaseMessage
- * @property {typeof deleteMessage} deleteMessage
- * @property {typeof deleteAll} deleteAll
- * @property {typeof encode} encode
- * @property {typeof decode} decode
- */
 
 /**
  * Returns the mailhog API interface.
