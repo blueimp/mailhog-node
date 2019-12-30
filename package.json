@@ -54,11 +54,15 @@
     "pretest": "eslint . && tsc",
     "test": "docker-compose run --rm test",
     "posttest": "docker-compose down",
+    "build": "rm -f libqp/index.d.ts index.d.ts && tsc -p tsconfig.d.json",
     "preversion": "npm test",
+    "version": "npm run build && git add -A libqp/index.d.ts index.d.ts",
     "postversion": "git push --tags origin HEAD && npm publish"
   },
   "files": [
+    "libqp/index.d.ts",
     "libqp/index.js",
+    "index.d.ts",
     "index.js"
   ],
   "main": "index.js"
