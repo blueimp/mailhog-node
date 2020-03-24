@@ -35,8 +35,8 @@ async function deleteAllMail() {
 before(sendAllMail)
 after(deleteAllMail)
 
-describe('encode', function() {
-  it('quoted-printable encoding of utf8 string', function() {
+describe('encode', function () {
+  it('quoted-printable encoding of utf8 string', function () {
     assert.strictEqual(
       mailhog.encode('üäö', 'quoted-printable'),
       '=C3=BC=C3=A4=C3=B6',
@@ -44,7 +44,7 @@ describe('encode', function() {
     )
   })
 
-  it('quoted-printable encoding of iso-8859-1 string', function() {
+  it('quoted-printable encoding of iso-8859-1 string', function () {
     assert.strictEqual(
       mailhog.encode('Ã¼Ã¤Ã¶', 'quoted-printable', 'iso-8859-1'),
       '=C3=BC=C3=A4=C3=B6',
@@ -52,7 +52,7 @@ describe('encode', function() {
     )
   })
 
-  it('quoted-printable encoding of long utf8 string', function() {
+  it('quoted-printable encoding of long utf8 string', function () {
     assert.strictEqual(
       mailhog.encode('üäö'.repeat(10), 'quoted-printable', 'utf8'),
       [
@@ -64,7 +64,7 @@ describe('encode', function() {
     )
   })
 
-  it('quoted-printable encoding of utf8 string, linelength:10', function() {
+  it('quoted-printable encoding of utf8 string, linelength:10', function () {
     assert.strictEqual(
       mailhog.encode('üäöüäö', 'quoted-printable', 'utf8', 10),
       '=C3=BC=C3=\r\n=A4=C3=B6=\r\n=C3=BC=C3=\r\n=A4=C3=B6',
@@ -72,7 +72,7 @@ describe('encode', function() {
     )
   })
 
-  it('base64 encoding of utf8 string', function() {
+  it('base64 encoding of utf8 string', function () {
     assert.strictEqual(
       mailhog.encode('üäö', 'base64'),
       'w7zDpMO2',
@@ -80,7 +80,7 @@ describe('encode', function() {
     )
   })
 
-  it('base64 encoding of iso-8859-1 string', function() {
+  it('base64 encoding of iso-8859-1 string', function () {
     assert.strictEqual(
       mailhog.encode('Ã¼Ã¤Ã¶', 'base64', 'iso-8859-1'),
       'w7zDpMO2',
@@ -88,7 +88,7 @@ describe('encode', function() {
     )
   })
 
-  it('base64 encoding of long utf8 string', function() {
+  it('base64 encoding of long utf8 string', function () {
     assert.strictEqual(
       mailhog.encode('üäö'.repeat(10), 'base64', 'utf8'),
       'w7zDpMO2'.repeat(9) + 'w7zD\r\npMO2',
@@ -96,7 +96,7 @@ describe('encode', function() {
     )
   })
 
-  it('base64 encoding of utf8 string, linelength:10', function() {
+  it('base64 encoding of utf8 string, linelength:10', function () {
     assert.strictEqual(
       mailhog.encode('üäöüäö', 'base64', 'utf8', 10),
       'w7zDpMO2w7\r\nzDpMO2',
@@ -105,8 +105,8 @@ describe('encode', function() {
   })
 })
 
-describe('decode', function() {
-  it('quoted-printable decoding to utf8 string', function() {
+describe('decode', function () {
+  it('quoted-printable decoding to utf8 string', function () {
     assert.strictEqual(
       mailhog.decode('=C3=BC=C3=A4=C3=B6', 'quoted-printable'),
       'üäö',
@@ -114,7 +114,7 @@ describe('decode', function() {
     )
   })
 
-  it('quoted-printable decoding to iso-8859-1 string', function() {
+  it('quoted-printable decoding to iso-8859-1 string', function () {
     assert.strictEqual(
       mailhog.decode('=C3=BC=C3=A4=C3=B6', 'quoted-printable', 'iso-8859-1'),
       'Ã¼Ã¤Ã¶',
@@ -122,7 +122,7 @@ describe('decode', function() {
     )
   })
 
-  it('quoted-printable decoding of wrapped string to utf8 string', function() {
+  it('quoted-printable decoding of wrapped string to utf8 string', function () {
     assert.strictEqual(
       mailhog.decode(
         [
@@ -137,7 +137,7 @@ describe('decode', function() {
     )
   })
 
-  it('base64 decoding to utf8 string', function() {
+  it('base64 decoding to utf8 string', function () {
     assert.strictEqual(
       mailhog.decode('w7zDpMO2', 'base64'),
       'üäö',
@@ -145,7 +145,7 @@ describe('decode', function() {
     )
   })
 
-  it('base64 decoding to iso-8859-1 string', function() {
+  it('base64 decoding to iso-8859-1 string', function () {
     assert.strictEqual(
       mailhog.decode('w7zDpMO2', 'base64', 'iso-8859-1'),
       'Ã¼Ã¤Ã¶',
@@ -153,7 +153,7 @@ describe('decode', function() {
     )
   })
 
-  it('base64 decoding of wrapped string to utf8 string', function() {
+  it('base64 decoding of wrapped string to utf8 string', function () {
     assert.strictEqual(
       mailhog.decode('w7zDpMO2'.repeat(9) + 'w7zD\r\npMO2', 'base64'),
       'üäö'.repeat(10),
@@ -162,13 +162,13 @@ describe('decode', function() {
   })
 })
 
-describe('multipart', function() {
-  it('parses quoted-printable encoded text content', async function() {
+describe('multipart', function () {
+  it('parses quoted-printable encoded text content', async function () {
     const result = await mailhog.latestTo('ueaeoe@example.org')
     assert.strictEqual(result.text, 'ü\r\näö', 'Returns plain text content')
   })
 
-  it('parses quoted-printable encoded HTML content', async function() {
+  it('parses quoted-printable encoded HTML content', async function () {
     const result = await mailhog.latestTo('ueaeoe@example.org')
     assert.strictEqual(
       result.html,
@@ -177,7 +177,7 @@ describe('multipart', function() {
     )
   })
 
-  it('parses attachments', async function() {
+  it('parses attachments', async function () {
     const result = await mailhog.latestTo('ueaeoe@example.org')
     assert.strictEqual(result.attachments.length, 2, 'Returns attachments')
     assert.strictEqual(result.attachments[0].name, 'black-80x60.gif')
@@ -218,18 +218,18 @@ describe('multipart', function() {
   })
 })
 
-describe('charset', function() {
-  it('parses mail with utf8 charset', async function() {
+describe('charset', function () {
+  it('parses mail with utf8 charset', async function () {
     const result = await mailhog.latestTo('nihon@example.org')
     assert.strictEqual(result.text, '日本\n', 'Parses mail with utf8 charset')
   })
 
-  it('parses mail with ISO-8859-1 charset', async function() {
+  it('parses mail with ISO-8859-1 charset', async function () {
     const result = await mailhog.latestTo('iso-8859-1@example.org')
     assert.strictEqual(result.text, 'üäö', 'Returns plain text content')
   })
 
-  it('parses mail without charset definition', async function() {
+  it('parses mail without charset definition', async function () {
     const result = await mailhog.latestTo('no-charset@example.org')
     assert.strictEqual(
       result.text,
@@ -239,8 +239,8 @@ describe('charset', function() {
   })
 })
 
-describe('headers', function() {
-  it('parses the mail Cc header', async function() {
+describe('headers', function () {
+  it('parses the mail Cc header', async function () {
     const result = await mailhog.latestTo('nihon@example.org')
     assert.strictEqual(
       result.cc,
@@ -249,7 +249,7 @@ describe('headers', function() {
     )
   })
 
-  it('parses the mail Bcc header', async function() {
+  it('parses the mail Bcc header', async function () {
     const result = await mailhog.latestTo('nihon@example.org')
     assert.strictEqual(
       result.bcc,
@@ -258,7 +258,7 @@ describe('headers', function() {
     )
   })
 
-  it('parses the mail Reply-To header', async function() {
+  it('parses the mail Reply-To header', async function () {
     const result = await mailhog.latestTo('nihon@example.org')
     assert.strictEqual(
       result.replyTo,
@@ -267,7 +267,7 @@ describe('headers', function() {
     )
   })
 
-  it('parses the mail Date header', async function() {
+  it('parses the mail Date header', async function () {
     const result = await mailhog.latestTo('nihon@example.org')
     assert.ok(
       result.deliveryDate instanceof Date,
@@ -280,7 +280,7 @@ describe('headers', function() {
     )
   })
 
-  it('parses the mail Delivery-Date header', async function() {
+  it('parses the mail Delivery-Date header', async function () {
     const result = await mailhog.latestTo('nihon@example.org')
     assert.ok(
       result.deliveryDate instanceof Date,
@@ -293,8 +293,8 @@ describe('headers', function() {
   })
 })
 
-describe('messages', function() {
-  it('retrieve mails', async function() {
+describe('messages', function () {
+  it('retrieve mails', async function () {
     const result = await mailhog.messages()
     assert.strictEqual(result.count, 4, 'Returns all emails')
     assert.strictEqual(
@@ -319,7 +319,7 @@ describe('messages', function() {
     )
   })
 
-  it('limit the messages range', async function() {
+  it('limit the messages range', async function () {
     const result = await mailhog.messages(3, 1)
     assert.strictEqual(result.count, 1, 'Returns a set for the given range')
     assert.strictEqual(
@@ -330,8 +330,8 @@ describe('messages', function() {
   })
 })
 
-describe('search', function() {
-  it('search mails containing the query', async function() {
+describe('search', function () {
+  it('search mails containing the query', async function () {
     const result = await mailhog.search(
       mailhog.encode('üäö', 'quoted-printable')
     )
@@ -343,7 +343,7 @@ describe('search', function() {
     )
   })
 
-  it('search mails from the given user', async function() {
+  it('search mails from the given user', async function () {
     const result = await mailhog.search('test@example.org', 'from')
     assert.strictEqual(result.count, 4, 'Returns a list of matching emails')
     assert.strictEqual(
@@ -353,7 +353,7 @@ describe('search', function() {
     )
   })
 
-  it('search mails to the given user', async function() {
+  it('search mails to the given user', async function () {
     const result = await mailhog.search('nihon@example.org', 'to')
     assert.strictEqual(result.count, 1, 'Returns a list of matching emails')
     assert.strictEqual(
@@ -363,7 +363,7 @@ describe('search', function() {
     )
   })
 
-  it('limit the search results range', async function() {
+  it('limit the search results range', async function () {
     const result = await mailhog.search('example.org', undefined, 3, 1)
     assert.strictEqual(result.count, 1, 'Returns a set for the given range')
     assert.strictEqual(
@@ -374,8 +374,8 @@ describe('search', function() {
   })
 })
 
-describe('latestFrom', function() {
-  it('latest mail from a given user', async function() {
+describe('latestFrom', function () {
+  it('latest mail from a given user', async function () {
     const result = await mailhog.latestFrom('test@example.org')
     assert.strictEqual(
       result.from,
@@ -385,8 +385,8 @@ describe('latestFrom', function() {
   })
 })
 
-describe('latestTo', function() {
-  it('latest mail to a given user', async function() {
+describe('latestTo', function () {
+  it('latest mail to a given user', async function () {
     const result = await mailhog.latestTo('nihon@example.org')
     assert.strictEqual(
       result.to,
@@ -396,8 +396,8 @@ describe('latestTo', function() {
   })
 })
 
-describe('latestContaining', function() {
-  it('latest mail with the query text in the body content', async function() {
+describe('latestContaining', function () {
+  it('latest mail with the query text in the body content', async function () {
     const result = await mailhog.latestContaining('text content')
     assert.strictEqual(
       result.text,
@@ -406,7 +406,7 @@ describe('latestContaining', function() {
     )
   })
 
-  it('latest mail with query text in the Subject header', async function() {
+  it('latest mail with query text in the Subject header', async function () {
     const result = await mailhog.latestContaining('ISO-8859-1')
     assert.strictEqual(
       result.subject,
@@ -415,7 +415,7 @@ describe('latestContaining', function() {
     )
   })
 
-  it('latest mail with the query text in the From header', async function() {
+  it('latest mail with the query text in the From header', async function () {
     const result = await mailhog.latestContaining('test@example.org')
     assert.strictEqual(
       result.from,
@@ -424,7 +424,7 @@ describe('latestContaining', function() {
     )
   })
 
-  it('latest mail with the query text in the To header', async function() {
+  it('latest mail with the query text in the To header', async function () {
     const result = await mailhog.latestContaining('nihon@example.org')
     assert.strictEqual(
       result.to,
@@ -433,7 +433,7 @@ describe('latestContaining', function() {
     )
   })
 
-  it('latest mail with query text in attachment filename', async function() {
+  it('latest mail with query text in attachment filename', async function () {
     const result = await mailhog.latestContaining('black-80x60.gif')
     assert.strictEqual(
       result.attachments[0].name,
@@ -443,11 +443,11 @@ describe('latestContaining', function() {
   })
 })
 
-describe('releaseMessage', function() {
+describe('releaseMessage', function () {
   after(deleteAllMail)
   after(sendAllMail)
 
-  it('releases the given mail to an outgoing SMTP server', async function() {
+  it('releases the given mail to an outgoing SMTP server', async function () {
     const result = await mailhog.latestTo('nihon@example.org')
     const response = await mailhog.releaseMessage(result.ID, {
       host: 'localhost',
@@ -474,11 +474,11 @@ describe('releaseMessage', function() {
   })
 })
 
-describe('deleteMessage', function() {
+describe('deleteMessage', function () {
   after(deleteAllMail)
   after(sendAllMail)
 
-  it('deletes the given mail from MailHog storage', async function() {
+  it('deletes the given mail from MailHog storage', async function () {
     const result = await mailhog.latestTo('nihon@example.org')
     const response = await mailhog.deleteMessage(result.ID)
     assert.strictEqual(
@@ -501,11 +501,11 @@ describe('deleteMessage', function() {
   })
 })
 
-describe('deleteAll', function() {
+describe('deleteAll', function () {
   after(deleteAllMail)
   after(sendAllMail)
 
-  it('deletes all mail from MailHog storage', async function() {
+  it('deletes all mail from MailHog storage', async function () {
     const response = await mailhog.deleteAll()
     assert.strictEqual(
       response.statusCode,
