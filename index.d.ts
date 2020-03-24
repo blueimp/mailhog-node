@@ -36,16 +36,49 @@ type Options = {
     basePath?: string;
 };
 type API = {
+    /**
+     * API options
+     */
     options: Options;
+    /**
+     * Gets all messages
+     */
     messages: typeof messages;
+    /**
+     * Gets messages matching a query
+     */
     search: typeof search;
+    /**
+     * Gets latest message from sender
+     */
     latestFrom: typeof latestFrom;
+    /**
+     * Gets latest message to recipient
+     */
     latestTo: typeof latestTo;
+    /**
+     * Gets latest with content
+     */
     latestContaining: typeof latestContaining;
+    /**
+     * Releases given message
+     */
     releaseMessage: typeof releaseMessage;
+    /**
+     * Deletes given message
+     */
     deleteMessage: typeof deleteMessage;
+    /**
+     * Deletes all messages
+     */
     deleteAll: typeof deleteAll;
+    /**
+     * Encodes given content
+     */
     encode: typeof encode;
+    /**
+     * Decodes given content
+     */
     decode: typeof decode;
 };
 type Attachment = {

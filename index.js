@@ -54,17 +54,17 @@
 
 /**
  * @typedef {object} API
- * @property {Options} options
- * @property {typeof messages} messages
- * @property {typeof search} search
- * @property {typeof latestFrom} latestFrom
- * @property {typeof latestTo} latestTo
- * @property {typeof latestContaining} latestContaining
- * @property {typeof releaseMessage} releaseMessage
- * @property {typeof deleteMessage} deleteMessage
- * @property {typeof deleteAll} deleteAll
- * @property {typeof encode} encode
- * @property {typeof decode} decode
+ * @property {Options} options API options
+ * @property {typeof messages} messages Gets all messages
+ * @property {typeof search} search Gets messages matching a query
+ * @property {typeof latestFrom} latestFrom Gets latest message from sender
+ * @property {typeof latestTo} latestTo Gets latest message to recipient
+ * @property {typeof latestContaining} latestContaining Gets latest with content
+ * @property {typeof releaseMessage} releaseMessage Releases given message
+ * @property {typeof deleteMessage} deleteMessage Deletes given message
+ * @property {typeof deleteAll} deleteAll Deletes all messages
+ * @property {typeof encode} encode Encodes given content
+ * @property {typeof decode} decode Decodes given content
  */
 
 /* global BufferEncoding */
