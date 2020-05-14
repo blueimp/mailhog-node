@@ -8,7 +8,7 @@ export = mailhog;
  */
 declare function mailhog(options?: Options): API;
 declare namespace mailhog {
-    export { Attachment, Message, Messages, Options, API };
+    export { Attachment, Message, Messages, Options, API, SMTPConfig };
 }
 /**
  * API options
@@ -167,6 +167,32 @@ type Messages = {
      */
     items: Array<Message>;
 };
+type SMTPConfig = {
+    /**
+     * SMTP host
+     */
+    host: string;
+    /**
+     * SMTP port
+     */
+    port: string;
+    /**
+     * recipient email
+     */
+    email: string;
+    /**
+     * SMTP username
+     */
+    username?: string;
+    /**
+     * SMTP password
+     */
+    password?: string;
+    /**
+     * SMTP auth mechanism (PLAIN or CRAM-MD5)
+     */
+    mechanism?: string;
+};
 /**
  * Requests mail objects from the MailHog API.
  *
@@ -210,23 +236,10 @@ declare function latestContaining(query: string): Promise<Message>;
  * Releases the mail with the given ID using the provided SMTP config.
  *
  * @param {string} id message ID
- * @param {object} config SMTP configuration
- * @param {string} config.host SMTP host
- * @param {string} config.port SMTP port
- * @param {string} config.email recipient email
- * @param {string} [config.username] SMTP username
- * @param {string} [config.password] SMTP password
- * @param {string} [config.mechanism] SMTP auth mechanism (PLAIN or CRAM-MD5)
+ * @param {SMTPConfig} config SMTP configuration
  * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
-declare function releaseMessage(id: string, config: {
-    host: string;
-    port: string;
-    email: string;
-    username: string;
-    password: string;
-    mechanism: string;
-}): Promise<import("http").IncomingMessage>;
+declare function releaseMessage(id: string, config: SMTPConfig): Promise<import("http").IncomingMessage>;
 /**
  * Deletes the mail with the given ID from MailHog.
  *

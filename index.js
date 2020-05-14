@@ -67,6 +67,16 @@
  * @property {typeof decode} decode Decodes given content
  */
 
+/**
+ * @typedef {object} SMTPConfig
+ * @property {string} host SMTP host
+ * @property {string} port SMTP port
+ * @property {string} email recipient email
+ * @property {string} [username] SMTP username
+ * @property {string} [password] SMTP password
+ * @property {string} [mechanism] SMTP auth mechanism (PLAIN or CRAM-MD5)
+ */
+
 /* global BufferEncoding */
 
 const http = require('http')
@@ -505,13 +515,7 @@ function latestContaining(query) {
  * Releases the mail with the given ID using the provided SMTP config.
  *
  * @param {string} id message ID
- * @param {object} config SMTP configuration
- * @param {string} config.host SMTP host
- * @param {string} config.port SMTP port
- * @param {string} config.email recipient email
- * @param {string} [config.username] SMTP username
- * @param {string} [config.password] SMTP password
- * @param {string} [config.mechanism] SMTP auth mechanism (PLAIN or CRAM-MD5)
+ * @param {SMTPConfig} config SMTP configuration
  * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
 function releaseMessage(id, config) {
