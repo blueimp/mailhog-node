@@ -2,10 +2,11 @@
 
 /* global before, after, describe, it, BufferEncoding */
 
+/** @type {object} */
+const assert = require('assert')
 const path = require('path')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
-const assert = require('assert')
 const env = process.env
 
 const mailhog = require('.')({
