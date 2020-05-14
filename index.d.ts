@@ -147,7 +147,7 @@ type Message = {
     /**
      * List of mail attachments
      */
-    attachments: Attachment[];
+    attachments: Array<Attachment>;
 };
 type Messages = {
     /**
@@ -165,7 +165,7 @@ type Messages = {
     /**
      * List of mail object items
      */
-    items: Message[];
+    items: Array<Message>;
 };
 /**
  * Requests mail objects from the MailHog API.
@@ -223,9 +223,9 @@ declare function releaseMessage(id: string, config: {
     host: string;
     port: string;
     email: string;
-    username?: string;
-    password?: string;
-    mechanism?: string;
+    username: string;
+    password: string;
+    mechanism: string;
 }): Promise<import("http").IncomingMessage>;
 /**
  * Deletes the mail with the given ID from MailHog.

@@ -4,7 +4,7 @@
  * @param {Buffer|string} buffer Buffer or String to convert
  * @returns {string} Quoted-Printable encoded string
  */
-export function encode(buffer: string | Buffer): string;
+export function encode(buffer: Buffer | string): string;
 /**
  * Decodes a Quoted-Printable encoded string to a Buffer object
  *
