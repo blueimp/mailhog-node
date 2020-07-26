@@ -52,6 +52,8 @@
  * @property {string} [basePath="/api"] API base path
  */
 
+/* eslint-disable jsdoc/valid-types */
+
 /**
  * @typedef {object} API
  * @property {Options} options API options
@@ -66,6 +68,8 @@
  * @property {typeof encode} encode Encodes given content
  * @property {typeof decode} decode Decodes given content
  */
+
+/* eslint-enable jsdoc/valid-types */
 
 /**
  * @typedef {object} SMTPConfig

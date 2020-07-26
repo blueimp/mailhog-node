@@ -1,15 +1,15 @@
-FROM alpine:3.11
+FROM alpine:3.12
 
 RUN apk --no-cache add \
-    nodejs \
-    npm \
+  nodejs \
+  npm \
   && npm install -g \
-    npm@latest \
-    mocha@7 \
+  npm@latest \
+  mocha@8 \
   # Clean up obsolete files:
   && rm -rf \
-    /tmp/* \
-    /root/.npm
+  /tmp/* \
+  /root/.npm
 
 USER nobody
 
