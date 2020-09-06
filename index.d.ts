@@ -8,7 +8,7 @@ export = mailhog;
  */
 declare function mailhog(options?: Options): API;
 declare namespace mailhog {
-    export { Attachment, Message, Messages, Options, API, SMTPConfig };
+    export { Attachment, MIME, Message, Messages, Options, API, SMTPConfig };
 }
 /**
  * API options
@@ -98,6 +98,16 @@ type Attachment = {
      * Encoded content
      */
     Body: string;
+    /**
+     * Encoded headers
+     */
+    Headers: Array<string>;
+};
+type MIME = {
+    /**
+     * Attachment parts
+     */
+    Parts: Array<Attachment>;
 };
 type Message = {
     /**
@@ -148,6 +158,14 @@ type Message = {
      * List of mail attachments
      */
     attachments: Array<Attachment>;
+    /**
+     * Mail Created property
+     */
+    Created: string;
+    /**
+     * Mail Mime property
+     */
+    MIME: MIME;
 };
 type Messages = {
     /**

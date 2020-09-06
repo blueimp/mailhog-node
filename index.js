@@ -17,6 +17,12 @@
  * @property {string} type Content-Type
  * @property {string} encoding Content-Transfer-Encoding
  * @property {string} Body Encoded content
+ * @property {Array<string>} Headers Encoded headers
+ */
+
+/**
+ * @typedef {object} MIME
+ * @property {Array<Attachment>} Parts Attachment parts
  */
 
 /**
@@ -33,6 +39,8 @@
  * @property {Date} date Mail Date header
  * @property {Date} deliveryDate Mail Delivery-Date header
  * @property {Array<Attachment>} attachments List of mail attachments
+ * @property {string} Created Mail Created property
+ * @property {MIME} MIME Mail Mime property
  */
 
 /**
@@ -227,6 +235,7 @@ function getHeader(mail, key) {
 /**
  * Memoized getter for mail text content.
  *
+ * @this Message
  * @returns {string} Decoded mail text content
  */
 function getText() {
@@ -237,6 +246,7 @@ function getText() {
 /**
  * Memoized getter for mail HTML content.
  *
+ * @this Message
  * @returns {string} Decoded mail HTML content
  */
 function getHTML() {
@@ -247,6 +257,7 @@ function getHTML() {
 /**
  * Memoized getter for mail Subject header.
  *
+ * @this Message
  * @returns {string} Decoded mail Subject header
  */
 function getSubject() {
@@ -257,6 +268,7 @@ function getSubject() {
 /**
  * Memoized getter for mail From header.
  *
+ * @this Message
  * @returns {string} Decoded mail From header
  */
 function getFrom() {
@@ -267,6 +279,7 @@ function getFrom() {
 /**
  * Memoized getter for mail To header.
  *
+ * @this Message
  * @returns {string} Decoded mail To header
  */
 function getTo() {
@@ -277,6 +290,7 @@ function getTo() {
 /**
  * Memoized getter for mail Cc header.
  *
+ * @this Message
  * @returns {string} Decoded mail Cc header
  */
 function getCc() {
@@ -287,6 +301,7 @@ function getCc() {
 /**
  * Memoized getter for mail Bcc header.
  *
+ * @this Message
  * @returns {string} Decoded mail Bcc header
  */
 function getBcc() {
@@ -297,6 +312,7 @@ function getBcc() {
 /**
  * Memoized getter for mail Reply-To header.
  *
+ * @this Message
  * @returns {string} Decoded mail Reply-To header
  */
 function getReplyTo() {
@@ -307,6 +323,7 @@ function getReplyTo() {
 /**
  * Memoized getter for mail Date header.
  *
+ * @this Message
  * @returns {Date} Mail Date header
  */
 function getDate() {
@@ -319,6 +336,7 @@ function getDate() {
 /**
  * Memoized getter for mail Delivery-Date header.
  *
+ * @this Message
  * @returns {Date} Mail Delivery-Date header
  */
 function getDeliveryDate() {
@@ -331,6 +349,7 @@ function getDeliveryDate() {
 /**
  * Memoized getter for mail Content-Type header.
  *
+ * @this Attachment
  * @returns {string} Decoded mail Content-Type header
  */
 function getContentType() {
@@ -341,6 +360,7 @@ function getContentType() {
 /**
  * Memoized getter for mail Content-Transfer-Encoding header.
  *
+ * @this Attachment
  * @returns {string} Decoded mail Content-Transfer-Encoding header
  */
 function getContentTransferEncoding() {
@@ -351,6 +371,7 @@ function getContentTransferEncoding() {
 /**
  * Memoized getter for mail attachments.
  *
+ * @this Message
  * @returns {Array<Attachment>} List of mail attachments
  */
 function getAttachments() {
