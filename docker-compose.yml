@@ -5,7 +5,6 @@ services:
     read_only: true
   test:
     build: .
-    init: true
     command: index.test.js
     read_only: true
     environment:
