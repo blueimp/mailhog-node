@@ -470,7 +470,7 @@ function request(options, data) {
  *
  * @param {number} [start=0] defines the offset for the messages query
  * @param {number} [limit=50] defines the max number of results
- * @returns {Promise<Messages>} resolves with object listing the mail items
+ * @returns {Promise<Messages?>} resolves with object listing the mail items
  */
 function messages(start, limit) {
   let path = `${this.options.basePath}/v2/messages`
@@ -487,7 +487,7 @@ function messages(start, limit) {
  * @param {string} [kind=containing] query kind, can be from|to|containing
  * @param {number} [start=0] defines the offset for the search query
  * @param {number} [limit=50] defines the max number of results
- * @returns {Promise<Messages>} resolves with object listing the mail items
+ * @returns {Promise<Messages?>} resolves with object listing the mail items
  */
 function search(query, kind, start, limit) {
   const basePath = this.options.basePath
@@ -504,7 +504,7 @@ function search(query, kind, start, limit) {
  * Sends a search request for the latest mail matching the "from" query.
  *
  * @param {string} query from address
- * @returns {Promise<Message>} resolves latest mail object for the "from" query
+ * @returns {Promise<Message?>} resolves latest mail object for the "from" query
  */
 function latestFrom(query) {
   return this.search(query, 'from', 0, 1).then(
@@ -516,7 +516,7 @@ function latestFrom(query) {
  * Sends a search request for the latest mail matching the "to" query.
  *
  * @param {string} query to address
- * @returns {Promise<Message>} resolves latest mail object for the "to" query
+ * @returns {Promise<Message?>} resolves latest mail object for the "to" query
  */
 function latestTo(query) {
   return this.search(query, 'to', 0, 1).then(
@@ -528,7 +528,7 @@ function latestTo(query) {
  * Sends a search request for the latest mail matching the "containing" query.
  *
  * @param {string} query search query
- * @returns {Promise<Message>} resolves latest mail object "containing" query
+ * @returns {Promise<Message?>} resolves latest mail object "containing" query
  */
 function latestContaining(query) {
   return this.search(query, 'containing', 0, 1).then(

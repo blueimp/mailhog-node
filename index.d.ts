@@ -216,9 +216,9 @@ type SMTPConfig = {
  *
  * @param {number} [start=0] defines the offset for the messages query
  * @param {number} [limit=50] defines the max number of results
- * @returns {Promise<Messages>} resolves with object listing the mail items
+ * @returns {Promise<Messages?>} resolves with object listing the mail items
  */
-declare function messages(start?: number, limit?: number): Promise<Messages>;
+declare function messages(start?: number, limit?: number): Promise<Messages | null>;
 /**
  * Sends a search request to the MailHog API.
  *
@@ -226,30 +226,30 @@ declare function messages(start?: number, limit?: number): Promise<Messages>;
  * @param {string} [kind=containing] query kind, can be from|to|containing
  * @param {number} [start=0] defines the offset for the search query
  * @param {number} [limit=50] defines the max number of results
- * @returns {Promise<Messages>} resolves with object listing the mail items
+ * @returns {Promise<Messages?>} resolves with object listing the mail items
  */
-declare function search(query: string, kind?: string, start?: number, limit?: number): Promise<Messages>;
+declare function search(query: string, kind?: string, start?: number, limit?: number): Promise<Messages | null>;
 /**
  * Sends a search request for the latest mail matching the "from" query.
  *
  * @param {string} query from address
- * @returns {Promise<Message>} resolves latest mail object for the "from" query
+ * @returns {Promise<Message?>} resolves latest mail object for the "from" query
  */
-declare function latestFrom(query: string): Promise<Message>;
+declare function latestFrom(query: string): Promise<Message | null>;
 /**
  * Sends a search request for the latest mail matching the "to" query.
  *
  * @param {string} query to address
- * @returns {Promise<Message>} resolves latest mail object for the "to" query
+ * @returns {Promise<Message?>} resolves latest mail object for the "to" query
  */
-declare function latestTo(query: string): Promise<Message>;
+declare function latestTo(query: string): Promise<Message | null>;
 /**
  * Sends a search request for the latest mail matching the "containing" query.
  *
  * @param {string} query search query
- * @returns {Promise<Message>} resolves latest mail object "containing" query
+ * @returns {Promise<Message?>} resolves latest mail object "containing" query
  */
-declare function latestContaining(query: string): Promise<Message>;
+declare function latestContaining(query: string): Promise<Message | null>;
 /**
  * Releases the mail with the given ID using the provided SMTP config.
  *
