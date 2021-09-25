@@ -257,20 +257,20 @@ declare function latestContaining(query: string): Promise<Message | null>;
  * @param {SMTPConfig} config SMTP configuration
  * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
-declare function releaseMessage(id: string, config: SMTPConfig): Promise<import("http").IncomingMessage>;
+declare function releaseMessage(id: string, config: SMTPConfig): Promise<http.IncomingMessage>;
 /**
  * Deletes the mail with the given ID from MailHog.
  *
  * @param {string} id message ID
  * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
-declare function deleteMessage(id: string): Promise<import("http").IncomingMessage>;
+declare function deleteMessage(id: string): Promise<http.IncomingMessage>;
 /**
  * Deletes all mails stored in MailHog.
  *
  * @returns {Promise<http.IncomingMessage>} resolves with http.IncomingMessage
  */
-declare function deleteAll(): Promise<import("http").IncomingMessage>;
+declare function deleteAll(): Promise<http.IncomingMessage>;
 /**
  * Encodes a String in the given charset to base64 or quoted-printable encoding.
  *
@@ -290,3 +290,4 @@ declare function encode(str: string, encoding?: string, charset?: string, lineLe
  * @returns {string} Decoded String
  */
 declare function decode(str: string, encoding?: string, charset?: string): string;
+import http = require("http");
