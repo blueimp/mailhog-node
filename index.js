@@ -18,6 +18,7 @@
  * @property {string} encoding Content-Transfer-Encoding
  * @property {string} Body Encoded content
  * @property {Array<string>} Headers Encoded headers
+ * @property {MIME} MIME Mime property
  */
 
 /**
@@ -39,6 +40,7 @@
  * @property {Date} date Mail Date header
  * @property {Date} deliveryDate Mail Delivery-Date header
  * @property {Array<Attachment>} attachments List of mail attachments
+ * @property {Attachment} Content The main mail content
  * @property {string} Created Mail Created property
  * @property {MIME} MIME Mail Mime property
  */
@@ -174,6 +176,25 @@ function decode(str, encoding, charset) {
 }
 
 /**
+ * Recursively gathers the attachments of both the passed mail object
+ * and recursively of its attachment parts.
+ *
+ * @param {object} entry MailHog mail or Attachment object
+ * @returns {Array<Attachment>} List of mail attachments parts
+ */
+function getMimePartsRecursively(entry) {
+  if (!entry.MIME) {
+    return []
+  }
+  let results = []
+  for (const part of entry.MIME.Parts) {
+    results.push(part)
+    results = results.concat(getMimePartsRecursively(part))
+  }
+  return results
+}
+
+/**
  * Returns the content part matching the given content-type regular expression.
  *
  * @param {object} mail MailHog mail object
@@ -182,7 +203,7 @@ function decode(str, encoding, charset) {
  */
 function getContent(mail, typeRegExp) {
   let parts = [mail.Content]
-  if (mail.MIME) parts = parts.concat(mail.MIME.Parts)
+  parts = parts.concat(getMimePartsRecursively(mail))
   for (const part of parts) {
     const type = (part.Headers['Content-Type'] || '').toString()
     if (typeRegExp.test(type)) {

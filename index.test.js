@@ -219,6 +219,26 @@ describe('multipart', function () {
   })
 })
 
+describe('multipart hierarchical', function () {
+  it('parses quoted-printable encoded text content', async function () {
+    const result = await mailhog.latestTo('multipart-hierarchical@test.com')
+    assert.strictEqual(
+      result.text,
+      'Some Test Message Text',
+      'Parses sub-level text part'
+    )
+  })
+
+  it('parses quoted-printable encoded HTML content', async function () {
+    const result = await mailhog.latestTo('multipart-hierarchical@test.com')
+    assert.strictEqual(
+      result.html,
+      'Some Test Message HTML',
+      'Parses sub-level html part'
+    )
+  })
+})
+
 describe('charset', function () {
   it('parses mail with utf8 charset', async function () {
     const result = await mailhog.latestTo('nihon@example.org')
@@ -297,31 +317,36 @@ describe('headers', function () {
 describe('messages', function () {
   it('retrieve mails', async function () {
     const result = await mailhog.messages()
-    assert.strictEqual(result.count, 4, 'Returns all emails')
+    assert.strictEqual(result.count, 5, 'Returns all emails')
     assert.strictEqual(
       result.items[0].subject,
+      'Mail with hierarchical mime content',
+      'Returns the decoded mail Subject header for the fifth mail in the set'
+    )
+    assert.strictEqual(
+      result.items[1].subject,
       'Mail without charset',
       'Returns the decoded mail Subject header for the first mail in the set'
     )
     assert.strictEqual(
-      result.items[1].subject,
+      result.items[2].subject,
       'ISO-8859-1',
       'Returns the decoded mail Subject header for the second mail in the set'
     )
     assert.strictEqual(
-      result.items[2].subject,
+      result.items[3].subject,
       '日本',
       'Returns the decoded mail Subject header for the third mail in the set'
     )
     assert.strictEqual(
-      result.items[3].subject,
+      result.items[4].subject,
       'üäö',
       'Returns the decoded mail Subject header for the fourth mail in the set'
     )
   })
 
   it('limit the messages range', async function () {
-    const result = await mailhog.messages(3, 1)
+    const result = await mailhog.messages(4, 1)
     assert.strictEqual(result.count, 1, 'Returns a set for the given range')
     assert.strictEqual(
       result.items[0].subject,
@@ -469,7 +494,7 @@ describe('releaseMessage', function () {
     const listResult = await mailhog.messages()
     assert.strictEqual(
       listResult.count,
-      5,
+      6,
       'Number of mails stored has increased by 1'
     )
   })
@@ -496,7 +521,7 @@ describe('deleteMessage', function () {
     const listResult = await mailhog.messages()
     assert.strictEqual(
       listResult.count,
-      3,
+      4,
       'Number of mails stored has decreased by 1'
     )
   })
